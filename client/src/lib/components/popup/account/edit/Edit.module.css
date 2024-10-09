@@ -1,0 +1,134 @@
+.edit {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 360px;
+  height: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 15px;
+  transform: translate(30%, 50%);
+}
+.edit .svg {
+  margin-top: 10px;
+  position: relative;
+  width: 50px;
+  height: 50px;
+  color: silver;
+}
+.edit .edit_title {
+  width: 100%;
+  text-align: center;
+  font-family: "Prompt", sans-serif;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 28px;
+}
+.edit .input_wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.edit .input_wrap label {
+  font-size: 16px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  color: #333;
+}
+.edit .input_wrap .error {
+  font-size: 15px;
+  height: 15px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  color: red;
+  position: relative;
+  transform: scale(0);
+  transition: all 0.3s ease;
+  visibility: hidden;
+}
+.edit .input_wrap .error.visible {
+  transform: scale(1);
+  visibility: visible;
+}
+.edit .input_wrap input {
+  width: 100%;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 400;
+  font-family: "Roboto", sans-serif;
+  outline: none;
+  border: 1.5px solid #cccccc;
+  transition: all 0.3s ease;
+}
+.edit .input_wrap input::placeholder {
+  padding-left: 5px;
+  color: #888888;
+  transition: all 0.5s ease;
+}
+.edit .input_wrap input:focus {
+  border: 1.5px solid dodgerblue;
+}
+.edit .input_wrap .input_error {
+  border: 1px solid red;
+  transition: all 0.2s ease-in-out;
+}
+.edit .buttons_block {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+.edit .buttons_block button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f1f1f1;
+  cursor: pointer;
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1.5px solid #cccccc;
+}
+.edit .buttons_block .cancel {
+  background: #f1f1f1;
+  color: #333;
+  border: 1.5px solid #cccccc;
+  transition: all 0.2s ease-in-out;
+}
+.edit .buttons_block .cancel:hover {
+  background: #e0e0e0;
+}
+.edit .buttons_block .confirm {
+  background: black;
+  color: whitesmoke;
+  border: 1.5px solid black;
+  transition: all 0.2s ease-in-out;
+}
+.edit .buttons_block .confirm:hover {
+  border: 1.5px solid #333;
+  background: #333;
+}
+.edit .buttons_block .disabled {
+  cursor: not-allowed;
+  background: #574c4c;
+  color: whitesmoke;
+}
+.edit .buttons_block .disabled:hover {
+  color: #999999;
+  border: 1.5px solid #999999;
+}
+
+/*# sourceMappingURL=Edit.module.css.map */

@@ -1,0 +1,1 @@
+export type InputTheme = 'primary' | 'search' | 'verification'

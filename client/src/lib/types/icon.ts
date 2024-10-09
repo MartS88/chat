@@ -1,0 +1,1 @@
+export type IconColor = '#818ea3' | '#fc6f7f' | '#9694FF' | '#d8d7ff' | 'red' | 'gray' | 'black' |  'lightblue' | 'blue' | 'whitesmoke';
