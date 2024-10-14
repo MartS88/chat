@@ -115,16 +115,16 @@
         return response;
       }, 1500);
     } catch (error) {
-      console.log('error singup', error.response.status);
-      console.log('error.message', error.response.data.message);
+      console.log('error login', error);
 
       setTimeout(() => {
         popupType = 'client-error';
         popupMsg = error.response.data.message || 'Server error';
         popupError = true;
-        loading = false;
       }, 1500);
-
+    }
+    finally {
+      loading = false;
     }
   }
 

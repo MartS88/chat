@@ -18,8 +18,7 @@
     showDropdown = !showDropdown;
   }
 
-  function handleNavigate(url: string) {
-
+  function handleNavigate() {
     toggleSidebarState(true);
     setTimeout(() => {
       toggleSidebarState(false);

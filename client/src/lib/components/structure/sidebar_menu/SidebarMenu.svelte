@@ -1,20 +1,21 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import {goto} from '$app/navigation';
 
   // Components
   import Icon from '$lib/components/ui/icon/Icon.svelte';
 
   // Types
-  import type { SidebarNavItem } from '$lib/types/menu';
+  import type {SidebarNavItem} from '$lib/types/menu';
 
   // Store
-  import { searchInputState, toggleSidebarState } from '../../../../store/store';
+  import {searchInputState, toggleSidebarState} from '../../../../store/store';
 
   // Props
   export let sidebarItem: SidebarNavItem[] = [];
 
   // Variables
   let sidebarActive = false;
+  let hoveredIndex: string | null = null;
 
   // Functions
   function toggleSidebarMenu(value: boolean) {
@@ -30,7 +31,14 @@
     setTimeout(() => {
       goto(url);
     }, 1000);
+  }
 
+  function handleMouseEnter(hoveredItem: string) {
+    hoveredIndex = hoveredItem;
+  }
+
+  function handleMouseLeave() {
+    hoveredIndex = null;
   }
 
   //Data
@@ -39,44 +47,44 @@
       icon: 'FaHome',
       title: 'BlockVision board',
       navigation: '/',
-      handler: () => handleNavigate('/home'),
+      handler: () => handleNavigate('/home')
     },
     {
       icon: 'FaExchangeAlt',
       title: 'Stake',
       navigation: '/stake',
-      handler: () => handleNavigate('/stake'),
+      handler: () => handleNavigate('/stake')
     },
     {
       icon: 'FaMoneyCheckAlt',
       title: 'Dex Explorer',
       navigation: '/dex',
-      handler: () => handleNavigate('/dex'),
+      handler: () => handleNavigate('/dex')
     },
     {
       icon: 'FaNewspaper',
       title: 'News Explorer',
       navigation: '/news',
-      handler: () => handleNavigate('/news'),
+      handler: () => handleNavigate('/news')
     },
     {
       icon: 'FaUser',
       title: 'User area',
       navigation: '/user-area',
-      handler: () => handleNavigate('/user-area'),
+      handler: () => handleNavigate('/user-area')
     },
     {
       icon: 'FaSearch',
       title: 'Search',
       navigation: '',
-      handler: () => searchInputState.update((value) => !value),
+      handler: () => searchInputState.update((value) => !value)
     },
     {
       icon: 'FaNetworkWired',
       title: 'Api',
       navigation: '/http://localhost:5000/api/docs',
       handler: () => window.open('http://localhost:5000/api/docs', '_blank')
-    },
+    }
   ];
 
 
@@ -84,7 +92,7 @@
 
 
 <div
-  class="sidebar_menu {sidebarActive ? 'active' : ''}"
+  class="sidebar_menu  {sidebarActive ? 'active' : ''}"
   on:mouseenter={() => toggleSidebarMenu(true)}
   on:mouseleave={() => toggleSidebarMenu(false)}
 >
@@ -92,9 +100,16 @@
     {#each menuItems as item}
       <div
         class="sidebar_menu_block"
+        on:mouseenter={() => handleMouseEnter(item.icon)}
+        on:mouseleave={handleMouseLeave}
         on:click={item.handler}
       >
-        <Icon iconType={item.icon} iconWidth={20} iconHeight={20} iconColor="gray" on:click={item.handler} />
+        <Icon
+          iconType={item.icon}
+          iconWidth={20}
+          iconHeight={20}
+          iconColor={hoveredIndex === item.icon ? '#818ea3' : 'gray'}
+          on:click={item.handler} />
         <span class="sidebar_menu_block_title">{item.title}</span>
 
       </div>
@@ -109,11 +124,6 @@
     height: 100%;
     background: #0000001a;
     transition: all 0.2s ease-in-out;
-
-    .sidebar_menu_disabled {
-      pointer-events: none;
-      cursor: auto;
-    }
 
     .sidebar_menu_wrapper {
       padding-top: 20px;
@@ -139,30 +149,9 @@
         &:hover {
           background: whitesmoke;
 
-          svg {
-            color: #818ea3;
-          }
-
           .sidebar_menu_block_title {
             color: #818ea3;
           }
-        }
-
-        a {
-          width: 100%;
-          height: 30px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-          transition: all 0.2s ease-in-out;
-        }
-
-        svg {
-          width: 20px;
-          height: 20px;
-          color: gray;
         }
 
         .sidebar_menu_block_title {
