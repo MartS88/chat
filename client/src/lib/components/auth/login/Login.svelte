@@ -4,7 +4,7 @@
   import Icon from '$lib/components/ui/icon/Icon.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
-  import Popup from '$lib/components/popup/signup_login/Popup.svelte';
+  import Popup from '$lib/components/popup/auth/Popup.svelte';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';
@@ -24,9 +24,10 @@
   // Variables
   let formFilled;
   let loading = false;
+
   let popupError = false;
-  let typeError = '';
-  let errorMsg = '';
+  let popupType = '';
+  let popupMsg = '';
 
   let email: string = '';
   let emailError: string | null = 'Email is required*';
@@ -118,8 +119,8 @@
       console.log('error.message', error.response.data.message);
 
       setTimeout(() => {
-        typeError = 'client-error';
-        errorMsg = error.response.data.message || 'Server error';
+        popupType = 'client-error';
+        popupMsg = error.response.data.message || 'Server error';
         popupError = true;
         loading = false;
       }, 1500);
@@ -146,7 +147,7 @@
   <div class="w-full h-10 z-10">
     {#if popupError}
       <div class="w-full" in:fly={{x: 200,  duration: 1000 }}>
-        <Popup type={typeError} label={errorMsg} on:click={closePopup} />
+        <Popup type={popupType} label={popupMsg} on:click={closePopup} />
       </div>
     {/if}
   </div>

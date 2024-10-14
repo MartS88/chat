@@ -30,6 +30,15 @@ export class User extends Model<User, UserCreationAttrs> {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
   isActivated: boolean;
 
+
+  @ApiProperty({ example: '34214', description: 'Password reset code' })
+  @Column({ type: DataType.STRING, allowNull: true })
+  resetPasswordCode: string;
+
+  @ApiProperty({ example: '2024-10-14T12:00:00Z', description: 'Password reset expiration date' })
+  @Column({ type: DataType.DATE, allowNull: true })
+  resetPasswordExpires: Date;
+
   @HasMany(() => ActivationLink, { onDelete: 'CASCADE', hooks: true })
   emailConfirmed: ActivationLink[];
 

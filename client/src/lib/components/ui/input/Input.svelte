@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import {createEventDispatcher} from 'svelte';
 
   type SvelteInputEvent = Event & {
@@ -12,9 +11,6 @@
   // Type
   import type {InputTheme} from '$lib/types/input';
 
-  // Icon
-  import FaSearch from 'svelte-icons/fa/FaSearch.svelte';
-
   // Store
   import {inputActive} from '../../../../store/store';
 
@@ -22,15 +18,34 @@
   export let type: 'text' | 'number' | 'password' | 'email' | 'range' = 'text';
   export let placeholder: string = '';
   export let themeName: InputTheme = 'primary';
-  export let name:string = ''
+  export let name: string = '';
+  export let autocomplete: string = '';
+  export let readonly: boolean = false;
+  export let disabled: boolean = false;
+  export let maxLength: number | null = null;
+  export let minLength: number | null = null;
 
   // Variables
+  let input: HTMLInputElement;
   let active: boolean = false;
+
   const dispatch = createEventDispatcher();
 
   // Functions
   function handleInput(event: SvelteInputEvent) {
-    const inputValue = event.currentTarget.value;
+    let inputValue = event.currentTarget.value;
+
+    if (type === 'number') {
+
+      inputValue = inputValue.replace(/[^0-9]/g, '');
+
+      if (maxLength !== null) {
+        inputValue = inputValue.slice(0, maxLength);
+      }
+
+      event.currentTarget.value = inputValue;
+    }
+
     dispatch('input', inputValue);
   }
 
@@ -42,13 +57,23 @@
     dispatch('click', event);
   }
 
+
+  export function focus() {
+    if (input) {
+      input.focus();
+    } else {
+      console.error('Input element not found');
+    }
+  }
+
   $: {
     inputActive.subscribe(value => {
       active = value;
     });
   }
-
 </script>
+
+
 {#if themeName === 'search'}
   <div class="search_input_wrapper" class:active={active}>
     <div class="left_block">
@@ -61,30 +86,31 @@
         name={name}
         placeholder={placeholder}
         class={themeName}
+        autocomplete={autocomplete}
+        readonly={readonly}
+        disabled={disabled}
+        minlength={minLength !== null ? minLength : undefined}
+        maxlength={maxLength !== null ? maxLength : undefined}
+        bind:this={input}
         on:input={handleInput}
         on:blur={handleBlur}
         on:click={handleClick}
       />
     </div>
   </div>
-{:else if themeName === 'primary'}
+{:else}
   <input
     {...$$restProps}
     type={type}
     name={name}
     placeholder={placeholder}
     class={themeName}
-    on:input={handleInput}
-    on:blur={handleBlur}
-    on:click={handleClick}
-  />
-{:else if themeName === 'verification'}
-  <input
-    {...$$restProps}
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    class={themeName}
+    autocomplete={autocomplete}
+    readonly={readonly}
+    disabled={disabled}
+    minlength={minLength !== null ? minLength : undefined}
+    maxlength={maxLength !== null ? maxLength : undefined}
+    bind:this={input}
     on:input={handleInput}
     on:blur={handleBlur}
     on:click={handleClick}
@@ -94,4 +120,3 @@
 <style>
     @import '$lib/style/components/input.scss';
 </style>
-

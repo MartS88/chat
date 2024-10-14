@@ -44,7 +44,9 @@
       <div class="w-[31.25rem]" in:fly={{x: 200,  duration: 1000 }}>
         <Input type="text" placeholder="Find your assets" themeName="search" on:click={toggleInput} />
       </div>
-      <Icon iconType='FaPowerOff' iconWidth={20} iconHeight={20} iconColor="#fc6f7f" on:click={setSearch} />
+      <div class="cursor-pointer -translate-x-1">
+        <Icon iconType='FaPowerOff' iconWidth={20} iconHeight={20} iconColor="#fc6f7f" on:click={setSearch} />
+      </div>
     {:else}
       <div class="mr-10">
       {#if accessToken}

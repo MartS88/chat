@@ -4,7 +4,7 @@
   import Icon from '$lib/components/ui/icon/Icon.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
-  import Popup from '$lib/components/popup/signup_login/Popup.svelte';
+  import Popup from '$lib/components/popup/auth/Popup.svelte';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';

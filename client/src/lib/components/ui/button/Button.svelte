@@ -36,7 +36,7 @@
     on:click={onClick}
   >
     {#if loading}
-     <Loader  logoWidth="25" logoHeight="25"/>
+     <Loader  logoWidth="25" logoHeight="25" />
       {:else}
     <slot>
       {label}

@@ -24,7 +24,6 @@ function createAccessTokenStore() {
 
   if (typeof window !== 'undefined') {
     initialValue = localStorage.getItem('accessToken');
-    console.log('accessToken',initialValue);
   }
 
   const {subscribe, set} = writable(initialValue);
@@ -51,7 +50,7 @@ function createEmailStore() {
 
   if (typeof window !== 'undefined') {
     initialValue = localStorage.getItem('email');
-    console.log('emailStore',initialValue);
+
   }
   const {subscribe, set} = writable(initialValue);
 

@@ -117,18 +117,18 @@ export class AuthService {
     const TOKEN = process.env.NODEMAILER_TOKEN;
 
     const client = new MailtrapClient({
-      token: TOKEN,
+      token: TOKEN
     });
 
     const sender = {
       email: 'hello@demomailtrap.com',
-      name: 'BlockVision',
+      name: 'BlockVision'
     };
 
     const recipients = [
       {
-        email: user.email,
-      },
+        email: user.email
+      }
     ];
 
     try {
@@ -157,14 +157,14 @@ export class AuthService {
           </body>
         </html>
       `,
-        category: 'Integration Test',
+        category: 'Integration Test'
       });
 
       console.log('Activation link sent successfully');
     } catch (error) {
 
       console.error('Failed to send activation link:', error);
-      await this.userRepository.destroy({ where: { email: user.email } });
+      await this.userRepository.destroy({where: {email: user.email}});
       throw new HttpException('Failed to send activation link', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -192,21 +192,72 @@ export class AuthService {
   }
 
 
-  // async updateActivationLink(userId: number) {
-  //     const emailCode = uuidv4().replace(/\D/g, '').substring(0, 6);
-  //     const verification = await this.emailConfirmationRepository.findOne({
-  //         where: {userId},
-  //         include: {all: true}
-  //     });
-  //     if (!verification) {
-  //         throw new Error('Verification code not found')
-  //     }
-  //     if (verification) {
-  //         verification.code = emailCode
-  //         await verification.save()
-  //         return verification
-  //     }
-  // }
+  async passwordRecovery(email: string) {
+    console.log('email', email);
+    const user = await this.userService.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User with this email does not exist.');
+    }
+    const recoveryCode = uuidv4().replace(/\D/g, '').substring(0, 6);
+    user.resetPasswordCode = recoveryCode;
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+    const username = user.username
+    await user.save()
+    await this.sendPasswordRecoveryCode(email,recoveryCode,username)
+  }
+
+  async sendPasswordRecoveryCode(email: string, code: string,username:string) {
+    const TOKEN = process.env.NODEMAILER_TOKEN;
+
+    const client = new MailtrapClient({
+      token: TOKEN
+    });
+
+    const sender = {
+      email: 'hello@demomailtrap.com',
+      name: 'BlockVision'
+    };
+
+    const recipients = [
+      {
+        email: email,
+      }
+    ];
+
+    try {
+      await client.send({
+        from: sender,
+        to: recipients,
+        subject: 'BlockVision user password recovery code',
+        html: `
+        <!doctype html>
+        <html>
+          <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+          </head>
+          <body style="font-family: sans-serif;">
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+              <h2>Password Recovery</h2>
+              <p>Hello ${username},</p>
+              <p>We received a request to reset your password. Please use this code to set a new password:</p>
+              <p style="color: #3498db; text-decoration: none;">${code}</p>
+               <p>This code is valid for the next 15 minutes.</p>
+              <p>If you did not request a password reset, please ignore this email.</p>
+              <br>
+              <p>Best regards,</p>
+              <p>Your Block Vision Team</p>
+            </div>
+          </body>
+        </html>
+      `,
+        category: 'Integration Test'
+      });
+
+      console.log('Password recovery code sent successfully');
+    } catch (error) {
+      throw new HttpException('Failed to send password recovery code', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   // async emailVerification(userId: number, code: string) {
   //     const id = userId
