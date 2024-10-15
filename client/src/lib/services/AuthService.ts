@@ -45,6 +45,12 @@ export default class AuthService {
       return response.data;
     } catch (error) {
       console.error('Logout failed AUTH SERVICE:', error);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('email');
+      localStorage.removeItem('isActivated');
+      accessTokenStore.clear();
+      emailStore.clear();
+      isActivatedStore.clear();
       throw error;
     }
   }
