@@ -31,7 +31,7 @@ export class User extends Model<User, UserCreationAttrs> {
   isActivated: boolean;
 
 
-  @ApiProperty({ example: '34214', description: 'Password reset code' })
+  @ApiProperty({ example: '874751', description: 'Password reset code' })
   @Column({ type: DataType.STRING, allowNull: true })
   resetPasswordCode: string;
 

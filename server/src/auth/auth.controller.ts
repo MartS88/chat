@@ -5,7 +5,7 @@ import {
   Post,
   Req,
   Res,
-  UnauthorizedException, UseGuards,
+  UnauthorizedException,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common';
@@ -14,7 +14,7 @@ import {CreateUserDto} from '../users/dto/create-user.dto';
 import {AuthService} from './auth.service';
 import {Response} from 'express';
 import {User} from '../users/user-model';
-import {JwtAuthGuard} from './jwt-auth.guard';
+import {PasswordRecoveryDto} from './dto/password-recovery';
 
 
 interface RequestWithCookies extends Request {
@@ -91,16 +91,33 @@ export class AuthController {
     }
   }
 
-  @ApiOperation({summary: 'Password recovery'})
-  @Post('/password-recovery')
+  @ApiOperation({summary: 'Send code for password recovery'})
+  @Post('/get-code')
   @UsePipes(ValidationPipe)
   async sendPasswordRecoveryCode(@Body('email') email: string) {
     try {
       console.log('Received email:', email);
-      await this.authService.passwordRecovery(email);
+      await this.authService.getPasswordRecoveryCode(email);
       return {success: true, message: 'Recovery code was sent to your email', statusCode: 200};
     } catch (error) {
       console.error('Error sending password recovery code:', error);
+      throw new HttpException(
+        {success: false, message: error.message},
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+
+  @ApiOperation({summary: 'Password recovery'})
+  @Post('/password-recovery')
+  @UsePipes(ValidationPipe)
+  async passwordRecovery(@Body() recoveryDto: PasswordRecoveryDto) {
+    try {
+      const data = await this.authService.passwordRecovery(recoveryDto);
+      return {success: true, message: data, statusCode: 200};
+    } catch (error) {
+      console.error('Error password recovery:', error);
       throw new HttpException(
         {success: false, message: error.message},
         HttpStatus.INTERNAL_SERVER_ERROR

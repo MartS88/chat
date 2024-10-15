@@ -12,6 +12,7 @@ import * as bcrypt from 'bcryptjs';
 import {ActivationLink} from '../users/activation-link-model';
 import {MailtrapClient, MailtrapTransport} from 'mailtrap';
 import * as process from 'node:process';
+import {PasswordRecoveryDto} from './dto/password-recovery';
 
 dotenv.config();
 
@@ -191,7 +192,7 @@ export class AuthService {
   }
 
 
-  async passwordRecovery(email: string) {
+  async getPasswordRecoveryCode(email: string) {
     console.log('email', email);
     const user = await this.userService.getUserByEmail(email);
     if (!user) {
@@ -200,12 +201,12 @@ export class AuthService {
     const recoveryCode = uuidv4().replace(/\D/g, '').substring(0, 6);
     user.resetPasswordCode = recoveryCode;
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
-    const username = user.username
-    await user.save()
-    await this.sendPasswordRecoveryCode(email,recoveryCode,username)
+    const username = user.username;
+    await user.save();
+    await this.sendPasswordRecoveryCode(email, recoveryCode, username);
   }
 
-  async sendPasswordRecoveryCode(email: string, code: string,username:string) {
+  async sendPasswordRecoveryCode(email: string, code: string, username: string) {
     const TOKEN = process.env.NODEMAILER_TOKEN;
 
     const client = new MailtrapClient({
@@ -219,7 +220,7 @@ export class AuthService {
 
     const recipients = [
       {
-        email: email,
+        email: email
       }
     ];
 
@@ -256,6 +257,39 @@ export class AuthService {
     } catch (error) {
       throw new HttpException('Failed to send password recovery code', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async passwordRecovery(recoveryDto: PasswordRecoveryDto) {
+    const user = await this.userService.getUserByEmail(recoveryDto.email);
+    if (!user) {
+      throw new NotFoundException('User with this email does not exist.');
+    }
+
+    const recoveryCode = await this.userRepository.findOne({
+      where: {
+        email: recoveryDto.email,
+        resetPasswordCode: recoveryDto.resetPasswordCode
+      },
+      include: {all: true}
+    });
+    if (!recoveryCode) {
+      console.log('emailVerification-SERVER');
+      throw new Error('Verification code is not correct');
+    }
+
+    const now = new Date();
+    const expirationTime = new Date(recoveryCode.resetPasswordExpires);
+    console.log('now',now)
+    console.log('expirationTime',expirationTime);
+    if (now > expirationTime) {
+      throw new Error('Verification code has expired');
+    }
+    const hashPassword = await bcrypt.hash(recoveryDto.newPassword, 5);
+    user.password = hashPassword
+    user.resetPasswordCode = null;
+    user.resetPasswordExpires = null;
+    await user.save()
+    return user
   }
 
   // async emailVerification(userId: number, code: string) {

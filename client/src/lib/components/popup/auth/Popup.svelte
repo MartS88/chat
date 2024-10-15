@@ -24,7 +24,7 @@
     class="w-full h-full popup flex items-center bg-black text-white px-10 py-2 rounded-lg shadow-lg z-100"
     type={type}
   >
-    <div class="flex items-center justify-center text-white rounded-full w-5 h-5 mr-2">
+    <div class="flex items-center justify-center text-white rounded-full w-5 h-5 mr-2 cursor-pointer">
       <Icon iconType="IoIosCloseCircle" iconColor="red" on:click={onClick} />
     </div>
     <span>{label || 'Invalid email or password'}</span>
@@ -45,7 +45,7 @@
     class="w-full h-full popup flex items-center bg-green-500 text-white px-10 py-2 rounded-lg shadow-lg z-100"
     type={type}
   >
-    <div class="flex items-center justify-center rounded-full w-5 h-5 mr-2">
+    <div class="flex items-center justify-center rounded-full w-5 h-5 mr-2 cursor-pointer">
       <Icon iconType="FaCheckCircle" iconColor="white" on:click={onClick} />
     </div>
     <span class="font-semibold">{label || 'Operation successful!'}</span>

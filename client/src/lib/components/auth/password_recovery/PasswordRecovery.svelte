@@ -15,7 +15,6 @@
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
   import Popup from '$lib/components/popup/auth/Popup.svelte';
-  import {onMount} from 'svelte';
 
 
   export let setMode: (value: string) => void;
@@ -24,9 +23,9 @@
   let formFilled;
   let loading = false;
 
-  let popupError = false;
-  let popupType = '';
-  let popupMsg = '';
+  let popupError = true;
+  let popupType;
+  let popupMsg;
 
 
   let email: string = '';
@@ -73,6 +72,7 @@
     if (!event) {
       return;
     }
+    code = event.detail;
     if (code.length < 6) {
       codeDirty = true;
       codeError = 'Code must contain 6 numbers*';
@@ -125,11 +125,11 @@
     if (emailError || email.length === 0 || !emailInput) {
       emailInput.focus();
     } else {
-      popupError = false
-      popupMsg = ''
+      popupError = false;
+      popupMsg = '';
       codeLoading = true;
       try {
-        const response = await axios.post('http://localhost:5000/auth/password-recovery', {email: email});
+        const response = await axios.post('http://localhost:5000/auth/get-code', {email: email});
         popupType = 'success';
         popupMsg = response.data.message;
         popupError = true;
@@ -148,20 +148,37 @@
   }
 
   async function handleSignup() {
-    loading = true
-   try {
-     const response = await axios.post('http://localhost:5000/auth/password')
-     console.log('response', response);
-     return response
-   }
-   catch (error){
-     setTimeout(() => {
-       popupType = 'client-error';
-       popupType = error.response.data.message || 'Server error';
-       popupError = true;
-       loading = false;
-     }, 1500);
-   }
+    popupMsg = '';
+    popupError = false;
+    loading = true;
+    try {
+      const body = {
+        email: email,
+        resetPasswordCode: code,
+        newPassword: password
+      };
+      console.log('body', body);
+
+      const response = await axios.post('http://localhost:5000/auth/password-recovery', body);
+      console.log('response', response);
+      if (response.data.success){
+        popupType = 'success'
+        popupMsg = 'Your password is updated'
+        popupError = true
+        setTimeout(() => {
+          loading = false
+        },1500)
+      }
+      return response;
+    } catch (error) {
+
+      setTimeout(() => {
+        popupType = 'client-error';
+        popupMsg = error.response.data.message || 'Server error';
+        popupError = true;
+        loading = false;
+      }, 1500);
+    }
   }
 
   $: formFilled = !emailError && !passwordError && !codeError && !passwordVerifyError;
@@ -239,7 +256,7 @@
       <Input
         type="password"
         name="password"
-        placeholder="Password"
+        placeholder="New password"
         themeName="primary"
         bind:value={password}
         on:input={(event) => passwordValidate(event)}
@@ -275,7 +292,7 @@
 
       <Button
         themeName="continue"
-        disabled={!formFilled}
+
         loading={loading}
         on:click={handleSignup}
       >

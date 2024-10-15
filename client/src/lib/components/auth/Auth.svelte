@@ -6,7 +6,7 @@
   import PasswordRecovery from '$lib/components/auth/password_recovery/PasswordRecovery.svelte';
 
 
-  let authMode = 'signup'
+  let authMode = 'passwordRecovery'
   function setMode(value:string){
     authMode = value
   }
