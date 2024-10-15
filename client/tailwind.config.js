@@ -16,7 +16,12 @@ export default {
       fontFamily: {
         prompt: ['Prompt', 'sans-serif'],
       },
-    }
+      fontSize: {
+        'h1-desktop': ['2.2rem', '3rem'],
+        'h1-md': ['2rem', '1.75rem'],
+        'h1-sm': ['1.75rem', '1.2rem'],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };

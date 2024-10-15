@@ -1,2 +1,7 @@
-<h1>Welcome to my world</h1>
-<slot/>
+<script>
+  //Components
+  import Center from '$lib/components/structure/containers/Center.svelte';
+</script>
+<Center>
+  <slot/>
+</Center>

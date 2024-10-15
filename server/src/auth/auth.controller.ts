@@ -5,7 +5,7 @@ import {
   Post,
   Req,
   Res,
-  UnauthorizedException,
+  UnauthorizedException, UseGuards,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common';
@@ -13,11 +13,18 @@ import {ApiOperation, ApiTags} from '@nestjs/swagger';
 import {CreateUserDto} from '../users/dto/create-user.dto';
 import {AuthService} from './auth.service';
 import {Response} from 'express';
+import {User} from '../users/user-model';
+import {JwtAuthGuard} from './jwt-auth.guard';
+
 
 interface RequestWithCookies extends Request {
   cookies: {
     refreshToken: string;
   };
+}
+
+interface RequestWithUser extends Request {
+  user: User;
 }
 
 @ApiTags('Authorization')
@@ -26,7 +33,7 @@ export class AuthController {
   constructor(private authService: AuthService) {
   }
 
-  @ApiOperation({ summary: 'Login' })
+  @ApiOperation({summary: 'Login'})
   @Post('/login')
   @UsePipes(ValidationPipe)
   async login(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
@@ -35,7 +42,7 @@ export class AuthController {
     return {accessToken: userData.tokens.accessToken, email: userData.email, isActivated: userData.isActivated};
   }
 
-  @ApiOperation({ summary: 'Registration' })
+  @ApiOperation({summary: 'Registration'})
   @Post('/registration')
   @UsePipes(ValidationPipe)
   async registration(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
@@ -44,7 +51,7 @@ export class AuthController {
     return {accessToken: userData.tokens.accessToken, email: userData.email};
   }
 
-  @ApiOperation({ summary: 'Refresh token' })
+  @ApiOperation({summary: 'Refresh token'})
   @Post('/refresh')
   @UsePipes(ValidationPipe)
   async refresh(@Body('refreshToken') refreshToken: string, @Res() res: Response) {
@@ -53,7 +60,7 @@ export class AuthController {
     return res.json({accessToken: tokens.accessToken});
   }
 
-  @ApiOperation({ summary: 'Logout' })
+  @ApiOperation({summary: 'Logout'})
   @Post('/logout')
   @UsePipes(ValidationPipe)
   async logout(@Req() req: RequestWithCookies, @Res() res: Response): Promise<Response> {
@@ -72,7 +79,7 @@ export class AuthController {
     }
   }
 
-  @ApiOperation({ summary: 'Token activation' })
+  @ApiOperation({summary: 'Token activation'})
   @Get('/activation/:token')
   async activation(@Param('token') token: string, @Res() res: Response) {
     try {
@@ -83,22 +90,46 @@ export class AuthController {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({success: false, error: error.message});
     }
   }
-  @ApiOperation({ summary: 'Password recovery' })
+
+  @ApiOperation({summary: 'Password recovery'})
   @Post('/password-recovery')
   @UsePipes(ValidationPipe)
   async sendPasswordRecoveryCode(@Body('email') email: string) {
     try {
       console.log('Received email:', email);
       await this.authService.passwordRecovery(email);
-      return { success: true, message: 'Recovery code was sent to your email', statusCode: 200 };
+      return {success: true, message: 'Recovery code was sent to your email', statusCode: 200};
     } catch (error) {
       console.error('Error sending password recovery code:', error);
       throw new HttpException(
-        { success: false, message: error.message },
+        {success: false, message: error.message},
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
 
+
+  //
+  // @Get('/me')
+  // async getProfile(@Req() req: Request, @Res() res: Response) {
+  //   // Получаем refreshToken из cookies
+  //   const refreshToken = req.cookies['refreshToken'];
+  //   if (!refreshToken) {
+  //     throw new UnauthorizedException('Refresh token not found');
+  //   }
+  //
+  //   try {
+  //     // Проверяем, существует ли токен в базе данных и является ли он валидным
+  //     const user = await this.authService.verifyRefreshToken(refreshToken);
+  //     if (!user) {
+  //       throw new UnauthorizedException('Invalid token');
+  //     }
+  //
+  //     // Возвращаем данные пользователя, если токен валиден
+  //     return res.json({ user });
+  //   } catch (error) {
+  //     throw new UnauthorizedException('Unauthorized');
+  //   }
+  // }
 
 }

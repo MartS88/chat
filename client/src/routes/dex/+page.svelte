@@ -8,7 +8,8 @@
 
 
 <Center>
-  <h1>DEX</h1>
+  <h1 class="mr-auto h1-custom">DEX</h1>
+
 </Center>
 
 

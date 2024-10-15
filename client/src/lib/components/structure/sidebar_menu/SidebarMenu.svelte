@@ -15,7 +15,7 @@
 
   // Variables
   let sidebarActive = false;
-  let hoveredIndex: string | null = null;
+  let hoveredMenuItem: number | null = null;
 
   // Functions
   function toggleSidebarMenu(value: boolean) {
@@ -33,12 +33,12 @@
     }, 1000);
   }
 
-  function handleMouseEnter(hoveredItem: string) {
-    hoveredIndex = hoveredItem;
+  function handleMouseEnter(hoveredIndex: number) {
+    hoveredMenuItem = hoveredIndex;
   }
 
   function handleMouseLeave() {
-    hoveredIndex = null;
+    hoveredMenuItem = null;
   }
 
   //Data
@@ -97,10 +97,10 @@
   on:mouseleave={() => toggleSidebarMenu(false)}
 >
   <div class="sidebar_menu_wrapper">
-    {#each menuItems as item}
+    {#each menuItems as item,index}
       <div
         class="sidebar_menu_block"
-        on:mouseenter={() => handleMouseEnter(item.icon)}
+        on:mouseenter={() => handleMouseEnter(index)}
         on:mouseleave={handleMouseLeave}
         on:click={item.handler}
       >
@@ -108,7 +108,7 @@
           iconType={item.icon}
           iconWidth={20}
           iconHeight={20}
-          iconColor={hoveredIndex === item.icon ? '#818ea3' : 'gray'}
+          iconColor={hoveredMenuItem === index ? '#818ea3' : 'gray'}
           on:click={item.handler} />
         <span class="sidebar_menu_block_title">{item.title}</span>
 

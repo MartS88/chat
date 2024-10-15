@@ -25,10 +25,9 @@
     authModalState.update(value => !value);
   }
 
-
   let accessToken;
   $: accessToken = $accessTokenStore;
-  console.log('accessToken',{$:accessToken});
+
 </script>
 
 

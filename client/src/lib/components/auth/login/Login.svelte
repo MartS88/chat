@@ -103,15 +103,15 @@
   }
 
   async function handleSignup() {
-    if (!formFilled) return;
-    popupError = false
+    popupMsg = '';
+    popupError = false;
     loading = true;
     try {
       const response = await AuthService.login(email, password);
       setTimeout(() => {
         loading = false;
         console.log('response login', response);
-        closeAuthModal()
+        closeAuthModal();
         return response;
       }, 1500);
     } catch (error) {
@@ -121,10 +121,8 @@
         popupType = 'client-error';
         popupMsg = error.response.data.message || 'Server error';
         popupError = true;
+        loading = false;
       }, 1500);
-    }
-    finally {
-      loading = false;
     }
   }
 

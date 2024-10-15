@@ -8,7 +8,7 @@
 
 
 <Center>
-  <h1>HOME</h1>
+  <h1 class="mr-auto h1-custom">HOME</h1>
 </Center>
 
 

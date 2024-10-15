@@ -1,1 +1,6 @@
-<h1>Login</h1>
+<script>
+  // Components
+  import Login from '$lib/components/auth/login/Login.svelte';
+</script>
+
+<Login/>
