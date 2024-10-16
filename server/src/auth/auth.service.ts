@@ -5,14 +5,14 @@ import {JwtService} from '@nestjs/jwt';
 import {User} from '../users/user-model';
 import {InjectModel} from '@nestjs/sequelize';
 import {RefreshToken} from './refresh-token-model';
-import Nodemailer from 'nodemailer';
 import {v4 as uuidv4} from 'uuid';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 import {ActivationLink} from '../users/activation-link-model';
 import {MailtrapClient, MailtrapTransport} from 'mailtrap';
 import * as process from 'node:process';
-import {PasswordRecoveryDto} from './dto/password-recovery';
+import {PasswordRecoveryDto} from './dto/password-recovery.dto';
+
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ export class AuthService {
   async login(userDto: CreateUserDto) {
     const user = await this.validateUser(userDto);
     const tokens = await this.generateTokens(user);
-    return {tokens, email: user.email, isActivated: user.isActivated};
+    return {tokens, username: user.username, email: user.email, isActivated: user.isActivated};
   }
 
   async registration(userDto: CreateUserDto) {
@@ -49,7 +49,7 @@ export class AuthService {
     });
     await this.sendActivationLink(user, activationLink);
     const tokens = await this.generateTokens(user);
-    return {tokens, email: user.email, isActivated: user.isActivated};
+    return {tokens, username: user.username, email: user.email, isActivated: user.isActivated};
   }
 
 
@@ -193,10 +193,15 @@ export class AuthService {
 
 
   async getPasswordRecoveryCode(email: string) {
-    console.log('email', email);
     const user = await this.userService.getUserByEmail(email);
     if (!user) {
       throw new NotFoundException('User with this email does not exist.');
+    }
+    const passwordCode = new Date(user.resetPasswordExpires)
+    const now = new Date();
+
+    if (passwordCode && now < passwordCode) {
+      throw new NotFoundException('You already have not expired code in your email');
     }
     const recoveryCode = uuidv4().replace(/\D/g, '').substring(0, 6);
     user.resetPasswordCode = recoveryCode;
@@ -279,17 +284,16 @@ export class AuthService {
 
     const now = new Date();
     const expirationTime = new Date(recoveryCode.resetPasswordExpires);
-    console.log('now',now)
-    console.log('expirationTime',expirationTime);
+
     if (now > expirationTime) {
       throw new Error('Verification code has expired');
     }
     const hashPassword = await bcrypt.hash(recoveryDto.newPassword, 5);
-    user.password = hashPassword
+    user.password = hashPassword;
     user.resetPasswordCode = null;
     user.resetPasswordExpires = null;
-    await user.save()
-    return user
+    await user.save();
+    return user;
   }
 
   // async emailVerification(userId: number, code: string) {

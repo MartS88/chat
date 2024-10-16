@@ -1,7 +1,7 @@
 .search_input_wrapper {
   width: 400px;
   height: 35px;
-  padding: 12px;
+  padding: 8px;
   position: relative;
   display: flex;
   align-items: center;
@@ -38,7 +38,7 @@
       height: 30px;
       background: whitesmoke;
       border: none;
-      padding: 12px;
+      padding: 7px;
       position: relative;
       font-size: 1rem;
       font-family: "Roboto";
@@ -51,9 +51,9 @@
 .primary {
   width: 100%;
   height: auto;
+  padding: 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  padding: 12px;
   transition: all .1s ease-in-out;
 
 
@@ -68,8 +68,8 @@
 .verification {
   width: 100%;
   height: 100%;
+  padding: 8px;
   border: none;
-  padding: 12px;
   transition: all .1s ease-in-out;
   box-shadow:none;
 

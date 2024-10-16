@@ -15,6 +15,8 @@
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
   import Popup from '$lib/components/popup/auth/Popup.svelte';
+  import {goto} from '$app/navigation';
+  import AuthService from '$lib/services/AuthService';
 
 
   export let setMode: (value: string) => void;
@@ -23,7 +25,7 @@
   let formFilled;
   let loading = false;
 
-  let popupError = true;
+  let popupError = false;
   let popupType;
   let popupMsg;
 
@@ -129,7 +131,7 @@
       popupMsg = '';
       codeLoading = true;
       try {
-        const response = await axios.post('http://localhost:5000/auth/get-code', {email: email});
+        const response =  await AuthService.sendRecoveryCode(email);
         popupType = 'success';
         popupMsg = response.data.message;
         popupError = true;
@@ -159,12 +161,14 @@
       };
       console.log('body', body);
 
-      const response = await axios.post('http://localhost:5000/auth/password-recovery', body);
+      const response = await axios.patch('http://localhost:5000/auth/password-recovery', body);
       console.log('response', response);
       if (response.data.success){
-        popupType = 'success'
-        popupMsg = 'Your password is updated'
-        popupError = true
+        setTimeout(() => {
+          popupType = 'success'
+          popupMsg = 'Your password is updated'
+          popupError = true
+        },500)
         setTimeout(() => {
           loading = false
         },1500)
@@ -180,6 +184,12 @@
       }, 1500);
     }
   }
+  async function handleSubmit(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      await handleSignup();
+    }
+  }
 
   $: formFilled = !emailError && !passwordError && !codeError && !passwordVerifyError;
 
@@ -187,7 +197,9 @@
 </script>
 
 <section class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
-         use:clickOutside on:outclick={closeAuthModal}
+         use:clickOutside
+         on:outclick={closeAuthModal}
+         on:keydown={handleSubmit}
 >
   <div class="w-full h-10 z-10">
     {#if popupError}
@@ -292,7 +304,7 @@
 
       <Button
         themeName="continue"
-
+        disabled={!formFilled}
         loading={loading}
         on:click={handleSignup}
       >

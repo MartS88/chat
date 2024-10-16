@@ -173,7 +173,6 @@
       await handleSignup();
     }
   }
-
   $: formFilled = !usernameError && !emailError && !passwordError && !passwordVerifyError;
 
 </script>

@@ -1,5 +1,5 @@
 export interface AuthResponse {
-    username?:string;
+    username:string;
     accessToken: string;
     email:string;
     isActivated:string;

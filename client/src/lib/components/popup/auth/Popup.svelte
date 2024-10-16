@@ -27,7 +27,7 @@
     <div class="flex items-center justify-center text-white rounded-full w-5 h-5 mr-2 cursor-pointer">
       <Icon iconType="IoIosCloseCircle" iconColor="red" on:click={onClick} />
     </div>
-    <span>{label || 'Invalid email or password'}</span>
+    <span class="text-center">{label || 'Invalid email or password'}</span>
   </div>
 {/if}
 
@@ -48,7 +48,7 @@
     <div class="flex items-center justify-center rounded-full w-5 h-5 mr-2 cursor-pointer">
       <Icon iconType="FaCheckCircle" iconColor="white" on:click={onClick} />
     </div>
-    <span class="font-semibold">{label || 'Operation successful!'}</span>
+    <span class="text-center font-semibold">{label || 'Operation successful!'}</span>
   </div>
 {/if}
 

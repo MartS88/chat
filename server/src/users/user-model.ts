@@ -4,6 +4,7 @@ import { RefreshToken } from '../auth/refresh-token-model';
 import { ActivationLink } from './activation-link-model';
 
 interface UserCreationAttrs {
+  username:string;
   email: string;
   password: string;
 }

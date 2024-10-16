@@ -1,5 +1,5 @@
 
-<div class="w-full h-auto flex flex-col items-center justify-center  mt-5">
+<div class="w-full max-w-[1200px] mt-5  h-auto flex flex-col items-center justify-center">
 
 <slot/>
 

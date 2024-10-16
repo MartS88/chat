@@ -110,13 +110,11 @@
       const response = await AuthService.login(email, password);
       setTimeout(() => {
         loading = false;
-        console.log('response login', response);
         closeAuthModal();
         return response;
       }, 1500);
     } catch (error) {
-      console.log('error login', error);
-
+      console.log('error login',error);
       setTimeout(() => {
         popupType = 'client-error';
         popupMsg = error.response.data.message || 'Server error';
@@ -129,7 +127,6 @@
   async function handleSubmit(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      console.log('event', event);
       await handleSignup();
     }
   }
@@ -169,7 +166,6 @@
         themeName="primary"
         bind:value={email}
         on:input={(event) => validateEmail(event)}
-
       />
       {#if emailError && emailDirty}
         <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{emailError}</p>
@@ -200,7 +196,6 @@
           themeName="primary"
           bind:value={passwordVerifyValue}
           on:input={(event) => passwordVerify(event)}
-
         />
         {#if passwordVerifyError && passwordVerifyDirty}
           <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"

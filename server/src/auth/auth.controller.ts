@@ -1,7 +1,7 @@
 import {
   Body,
   Controller, Get, HttpException,
-  HttpStatus, Param,
+  HttpStatus, Param, Patch,
   Post,
   Req,
   Res,
@@ -14,7 +14,7 @@ import {CreateUserDto} from '../users/dto/create-user.dto';
 import {AuthService} from './auth.service';
 import {Response} from 'express';
 import {User} from '../users/user-model';
-import {PasswordRecoveryDto} from './dto/password-recovery';
+import {PasswordRecoveryDto} from './dto/password-recovery.dto';
 
 
 interface RequestWithCookies extends Request {
@@ -39,7 +39,7 @@ export class AuthController {
   async login(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
     const userData = await this.authService.login(userDto);
     res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true});
-    return {accessToken: userData.tokens.accessToken, email: userData.email, isActivated: userData.isActivated};
+    return {accessToken: userData.tokens.accessToken, username:userData.username, email: userData.email, isActivated: userData.isActivated};
   }
 
   @ApiOperation({summary: 'Registration'})
@@ -48,7 +48,7 @@ export class AuthController {
   async registration(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
     const userData = await this.authService.registration(userDto);
     res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true});
-    return {accessToken: userData.tokens.accessToken, email: userData.email};
+    return {accessToken: userData.tokens.accessToken, username:userData.username, email: userData.email, isActivated:userData.isActivated};
   }
 
   @ApiOperation({summary: 'Refresh token'})
@@ -96,7 +96,6 @@ export class AuthController {
   @UsePipes(ValidationPipe)
   async sendPasswordRecoveryCode(@Body('email') email: string) {
     try {
-      console.log('Received email:', email);
       await this.authService.getPasswordRecoveryCode(email);
       return {success: true, message: 'Recovery code was sent to your email', statusCode: 200};
     } catch (error) {
@@ -108,14 +107,13 @@ export class AuthController {
     }
   }
 
-
   @ApiOperation({summary: 'Password recovery'})
-  @Post('/password-recovery')
+  @Patch('/password-recovery')
   @UsePipes(ValidationPipe)
   async passwordRecovery(@Body() recoveryDto: PasswordRecoveryDto) {
     try {
-      const data = await this.authService.passwordRecovery(recoveryDto);
-      return {success: true, message: data, statusCode: 200};
+      const userData = await this.authService.passwordRecovery(recoveryDto);
+      return {success: true, message: userData, statusCode: 200};
     } catch (error) {
       console.error('Error password recovery:', error);
       throw new HttpException(

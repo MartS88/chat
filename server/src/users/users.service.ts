@@ -5,6 +5,7 @@ import {Injectable, InternalServerErrorException, NotFoundException} from '@nest
 import {UpdatePasswordDto} from './dto/update-password.dto';
 import {UpdateEmailDto} from './dto/update-email.dto';
 import * as bcrypt from 'bcryptjs';
+import {UpdateUsernameDto} from './dto/update-username.dto';
 
 
 @Injectable()
@@ -43,6 +44,19 @@ export class UsersService {
                 throw error;
             }
             throw new InternalServerErrorException('Error updating password');
+        }
+    }
+
+
+    async updateUsername(dto: UpdateUsernameDto) {
+        try {
+
+        } catch (error) {
+            console.error('Error updating username:', error);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new InternalServerErrorException('Error updating username');
         }
     }
 
