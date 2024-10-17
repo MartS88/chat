@@ -5,19 +5,21 @@
   import Login from '$lib/components/auth/login/Login.svelte';
   import PasswordRecovery from '$lib/components/auth/password_recovery/PasswordRecovery.svelte';
 
-  let authMode = 'signup'
+  let mode = 'signup'
   function setMode(value:string){
-    authMode = value
+    mode = value
   }
+
+
 
 </script>
 
 
-{#if authMode === 'signup'}
+{#if mode === 'signup'}
   <Signup {setMode}/>
-{:else if authMode === 'login'}
+{:else if mode === 'login'}
   <Login {setMode}/>
-{:else if authMode === 'passwordRecovery'}
+{:else if mode === 'password-recovery'}
   <PasswordRecovery {setMode}/>
 {/if}
 

@@ -1,4 +1,5 @@
-<script>
+<script >
+  import { page } from '$app/stores';
 
   // Transition
   import {fade, fly} from 'svelte/transition';
@@ -21,40 +22,42 @@
   $: sidebarState = $sidebarMenuState;
 
 
+
 </script>
 
-
-<div class="w-full max-w-[2000px] mx-auto">
-  <Header />
-  <main>
-    {#if searchState}
-      <div in:fade={{ duration: 1000 }} class="search_list">
-        <Logo logoWidth="192" logoHeight="192" />
-      </div>
-    {:else}
-      <div class="main_left_block" in:fly={{ y: 200, duration: 500 }}>
-        <SidebarMenu />
-      </div>
-
-      <div class="main_right_block" class:active={$sidebarMenuState} in:fade={{ duration: 700 }}>
-        {#if $sidebarMenuState}
-          <div in:fade={{ duration: 700 }}>
-            <Logo logoWidth="192" logoHeight="192" />
-          </div>
-        {:else}
-          <slot />
-        {/if}
+{#if !$page.url.pathname.startsWith('/auth')}
+  <div class="w-full max-w-[2000px] mx-auto">
+    <Header />
+    <main>
+      {#if searchState}
+        <div in:fade={{ duration: 1000 }} class="search_list">
+          <Logo logoWidth="192" logoHeight="192" />
+        </div>
+      {:else}
+        <div class="main_left_block" in:fly={{ y: 200, duration: 500 }}>
+          <SidebarMenu />
+        </div>
+        <div class="main_right_block" class:active={$sidebarMenuState} in:fade={{ duration: 700 }}>
+          {#if $sidebarMenuState}
+            <div in:fade={{ duration: 700 }}>
+              <Logo logoWidth="192" logoHeight="192" />
+            </div>
+          {:else}
+            <slot />
+          {/if}
+        </div>
+      {/if}
+    </main>
+    {#if authModal}
+      <div class="auth_popup" in:fade={{ duration: 100 }}>
+        <Auth />
       </div>
     {/if}
-  </main>
-
-  {#if authModal}
-    <div class="auth_popup" in:fade={{ duration: 100 }}>>
-      <Auth />
-    </div>
+    <Footer />
+  </div>
+  {:else}
+    <slot/>
   {/if}
-  <Footer />
-</div>
 
 <style lang="scss">
   .auth_popup {

@@ -1,8 +1,10 @@
 <script lang="ts">
+  import {page} from '$app/stores';
 
   // Components
   import Icon from '$lib/components/ui/icon/Icon.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
+  import ButtonLink from '$lib/components/ui/buttonlink/ButtonLink.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
   import Popup from '$lib/components/popup/auth/Popup.svelte';
 
@@ -114,7 +116,7 @@
         return response;
       }, 1500);
     } catch (error) {
-      console.log('error login',error);
+      console.log('error login', error);
       setTimeout(() => {
         popupType = 'client-error';
         popupMsg = error.response.data.message || 'Server error';
@@ -132,12 +134,13 @@
   }
 
   $: formFilled = !emailError && !passwordError && !passwordVerifyError;
+  $: authPath = $page.url.pathname.startsWith('/auth');
 
 </script>
 
-<section class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
-         use:clickOutside on:outclick={closeAuthModal}
-         on:keydown={handleSubmit}
+<form class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
+      use:clickOutside on:outclick={closeAuthModal}
+      on:keydown={handleSubmit}
 >
   <div class="w-full h-10 z-10">
     {#if popupError}
@@ -203,7 +206,13 @@
         {/if}
       </div>
       <div class="">
-        <Button themeName="link" on:click={() => setMode('passwordRecovery')}>Forgot password?</Button>
+
+        {#if authPath}
+          <ButtonLink url="/auth/password-recovery">Forgot password?</ButtonLink>
+        {:else}
+          <ButtonLink on:click={() => setMode('password-recovery')}>Forgot password?</ButtonLink>
+        {/if}
+
       </div>
     </div>
 
@@ -226,17 +235,22 @@
       </Button>
     </div>
 
+    <div class="w-full flex items-center">
+      <p class="text-center text-gray-500  mr-auto">
+        Don't have an account yet?
 
-    <p class="text-center text-gray-500  mr-auto">
-      Don't have an account yet?
+        {#if authPath}
+          <ButtonLink url="/auth/signup">Sign up</ButtonLink>
+        {:else}
+          <ButtonLink on:click={() => setMode('signup')}>Sign up</ButtonLink>
+        {/if}
 
-      <Button
-        themeName="link"
-        on:click={() => setMode('signup')}>Sign up
-      </Button>
-
-    </p>
+      </p>
+      {#if authPath}
+        <ButtonLink url="http://localhost:3000/">to Main Page</ButtonLink>
+      {/if}
+    </div>
   </div>
 
-</section>
+</form>
 

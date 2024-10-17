@@ -1,8 +1,10 @@
 <script lang="ts">
+  import {page} from '$app/stores';
 
   // Components
   import Icon from '$lib/components/ui/icon/Icon.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
+  import ButtonLink from '$lib/components/ui/buttonlink/ButtonLink.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
   import Popup from '$lib/components/popup/auth/Popup.svelte';
 
@@ -17,6 +19,7 @@
 
   // Service
   import AuthService from '$lib/services/AuthService';
+
 
   // Functions
   export let setMode: (value: string) => void;
@@ -119,21 +122,6 @@
     }
   }
 
-  function onBlur(event: FocusEvent) {
-    console.log('ONBLUR EVENT', event);
-    const target = event.detail as HTMLInputElement;
-    switch (target.srcElement.name) {
-      case 'email':
-        emailDirty = true;
-        break;
-      case 'password':
-        passwordDirty = true;
-        break;
-      case 'passwordVerify':
-        passwordVerifyDirty = true;
-        break;
-    }
-  }
 
   function closePopup() {
     popupError = false;
@@ -141,7 +129,7 @@
 
   async function handleSignup() {
     if (!formFilled) return;
-    popupError = false
+    popupError = false;
     loading = true;
     try {
       const response = await AuthService.registration(username, email, password);
@@ -173,13 +161,15 @@
       await handleSignup();
     }
   }
+
   $: formFilled = !usernameError && !emailError && !passwordError && !passwordVerifyError;
+  $: authPath = $page.url.pathname.startsWith('/auth');
 
 </script>
 {#if firstStep}
-  <section class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
-           use:clickOutside on:outclick={closeAuthModal}
-           on:keydown={handleSubmit}
+  <form class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
+        use:clickOutside on:outclick={closeAuthModal}
+        on:keydown={handleSubmit}
   >
     <div class="w-full h-10 z-10">
       {#if popupError}
@@ -277,16 +267,24 @@
         </Button>
       </div>
 
-      <p class="text-center text-gray-500 mr-auto">
-        Already have an account?
-        <Button
-          themeName="link"
-          on:click={() => setMode('login')}
-        >Log in
-        </Button>
-      </p>
+      <div class="w-full flex items-center">
+        <p class="text-center text-gray-500 mr-auto">
+          Already have an account?
+
+          {#if authPath}
+            <ButtonLink url="/auth/login">Log in</ButtonLink>
+          {:else}
+            <ButtonLink on:click={() => setMode('login')}>Log in</ButtonLink>
+          {/if}
+        </p>
+
+        {#if authPath}
+          <ButtonLink url="http://localhost:3000/">to Main Page</ButtonLink>
+        {/if}
+      </div>
+
     </div>
-  </section>
+  </form>
 {:else}
   <section class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
            use:clickOutside on:outclick={closeAuthModal}
