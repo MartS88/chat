@@ -6,7 +6,7 @@
   // Service
   import AuthService from '$lib/services/AuthService';
   import Loader from '$lib/components/ui/loader/Loader.svelte';
-  import {emailStore,  toggleSidebarState} from '../../../store/store';
+  import {emailStore, toggleSidebarState} from '../../../store/store';
   import {goto} from '$app/navigation';
 
   // Variables
@@ -30,18 +30,25 @@
 
   async function handleLogout() {
     loading = true;
-    setTimeout(() => {
-      AuthService.logout();
-    }, 1400);
-    setTimeout(() => {
-      loading = false;
-    }, 1500);
+    try {
+      setTimeout(() => {
+        AuthService.logout();
+        loading = false;
+      }, 1500);
+
+    } catch (error) {
+      console.log('error', error);
+      setTimeout(() => {
+        loading = false;
+      }, 1500);
+    }
   }
+
 
   let username = 'dexter';
   $: email = $emailStore;
 
-  console.log('email',email);
+  console.log('email', email);
 
 </script>
 

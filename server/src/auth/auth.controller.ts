@@ -13,7 +13,6 @@ import {ApiOperation, ApiTags} from '@nestjs/swagger';
 import {CreateUserDto} from '../users/dto/create-user.dto';
 import {AuthService} from './auth.service';
 import {Response} from 'express';
-import {User} from '../users/user-model';
 import {PasswordRecoveryDto} from './dto/password-recovery.dto';
 
 
@@ -21,10 +20,6 @@ interface RequestWithCookies extends Request {
   cookies: {
     refreshToken: string;
   };
-}
-
-interface RequestWithUser extends Request {
-  user: User;
 }
 
 @ApiTags('Authorization')
@@ -84,7 +79,26 @@ export class AuthController {
   async activation(@Param('token') token: string, @Res() res: Response) {
     try {
       await this.authService.activate(token);
-      return res.redirect('http://localhost:3000/user-area');
+      res.send(`
+      <html>
+        <head>
+          <title>Activation</title>
+        </head>
+        <body>
+          <div style="display: flex;flex-direction: column;justify-content: center;align-items: center">
+            <img src='https://myecomz.com/en/img/emails/51-merchant-6-registration.png' alt="Activation Successful" />
+            <h2>Activation Successful!</h2>
+            <p>You will be redirected shortly...</p>
+          </div>
+          <script>
+            setTimeout(function() {
+              window.location.href = 'http://localhost:3000/home';
+            }, 3000);
+          </script>
+        </body>
+      </html>
+    `);
+
     } catch (error) {
       console.error('Error activating account:', error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({success: false, error: error.message});

@@ -185,9 +185,9 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    user.isActivated = true;
-    await user.save();
-    await activation.destroy();
+     user.isActivated = true;
+      await user.save();
+     // await activation.destroy();
     return 'Activation successful';
   }
 

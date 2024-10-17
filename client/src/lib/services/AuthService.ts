@@ -36,7 +36,7 @@ export default class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      const response = await axios.post('/logout', {}, {withCredentials: true});
+      const response = await axios.post('http://localhost:5000/auth/logout', {}, {withCredentials: true});
       localStorage.removeItem('accessToken');
       localStorage.removeItem('username');
       localStorage.removeItem('email');
