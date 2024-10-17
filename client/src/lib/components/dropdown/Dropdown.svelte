@@ -3,10 +3,13 @@
   // Components
   import Icon from '$lib/components/ui/icon/Icon.svelte';
 
+  // Hooks
+  import {clickOutside} from '$lib/hooks/click_outside';
+
   // Service
   import AuthService from '$lib/services/AuthService';
   import Loader from '$lib/components/ui/loader/Loader.svelte';
-  import {emailStore, toggleSidebarState} from '../../../store/store';
+  import {closeAuthModal, emailStore, toggleSidebarState} from '../../../store/store';
   import {goto} from '$app/navigation';
 
   // Variables
@@ -55,7 +58,10 @@
 {#if loading}
   <Loader logoWidth="30" logoHeight="30" />
 {:else}
-  <div class="w-70 relative flex flex-col justify-center items-center cursor-pointer" on:click="{toggleDropdown}">
+  <div class="w-70 relative flex flex-col justify-center items-center cursor-pointer"
+       use:clickOutside
+       on:outclick={toggleDropdown}
+       on:click="{toggleDropdown}">
     <div
       class="w-full p-1 flex items-center border-gray-200 rounded-full transition-colors duration-300 hover:bg-custom-gray-transparent hover:rounded-full">
       <div
