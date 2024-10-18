@@ -25,7 +25,7 @@
 </script>
 
 {#if !authPath}
-  <div class="w-full max-w-[2000px] mx-auto">
+  <div class="w-full max-w-[2000px] mx-auto" in:fly={{ y: -200, duration: 500 }}>
     <Header />
     <main>
       {#if searchState}
