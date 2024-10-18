@@ -131,6 +131,7 @@
     if (emailError || email.length === 0 || !emailInput) {
       emailInput.focus();
     } else {
+      code = ''
       popupError = false;
       popupMsg = '';
       codeLoading = true;
@@ -163,10 +164,9 @@
         resetPasswordCode: code,
         newPassword: password
       };
-      console.log('body', body);
 
       const response = await axios.patch('http://localhost:5000/auth/password-recovery', body);
-      console.log('response', response);
+
       if (response.data.success) {
         setTimeout(() => {
           popupType = 'success';
@@ -174,6 +174,7 @@
           popupError = true;
         }, 500);
         setTimeout(() => {
+          setMode('login')
           loading = false;
         }, 1500);
       }

@@ -1,11 +1,12 @@
 import axios, {type AxiosResponse} from 'axios';
-import type {AuthResponse} from '$lib/types/AuthResponse';
+import type {AuthResponse} from '$lib/types/http/AuthResponse';
 import $api from '$lib/http/auth';
 import {accessTokenStore, emailStore, isActivatedStore} from '../../store/store';
+import type {LogoutResponse} from '$lib/types/http/LogoutResponse';
 
 export default class AuthService {
   static async login(email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    const response = await $api.post<AuthResponse>('/login', {email, password});
+    const response = await $api.post<AuthResponse>('auth/login', {email, password});
     localStorage.setItem('accessToken', response.data.accessToken);
     localStorage.setItem('username', response.data.username);
     localStorage.setItem('email', response.data.email);
@@ -20,7 +21,7 @@ export default class AuthService {
   }
 
   static async registration(username: string, email: string, password: string): Promise<AxiosResponse<AuthResponse>> {
-    const response = await $api.post<AuthResponse>('/registration', {username, email, password});
+    const response = await $api.post<AuthResponse>('auth/registration', {username, email, password});
     localStorage.setItem('accessToken', response.data.accessToken);
     localStorage.setItem('username', response.data.username);
     localStorage.setItem('email', response.data.email);
@@ -34,9 +35,9 @@ export default class AuthService {
     return response;
   }
 
-  static async logout(): Promise<void> {
+  static async logout(): Promise<AxiosResponse<LogoutResponse>> {
     try {
-      const response = await axios.post('http://localhost:5000/auth/logout', {}, {withCredentials: true});
+      const response = await $api.post(`auth/logout`);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('username');
       localStorage.removeItem('email');
@@ -44,27 +45,19 @@ export default class AuthService {
       accessTokenStore.clear();
       emailStore.clear();
       isActivatedStore.clear();
-      return response.data;
+      return response;
     } catch (error) {
-      console.error('Logout failed AUTH SERVICE:', error);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('email');
-      localStorage.removeItem('isActivated');
-      accessTokenStore.clear();
-      emailStore.clear();
-      isActivatedStore.clear();
       throw error;
     }
   }
 
-
   static async sendRecoveryCode(email: string): Promise<AxiosResponse<string>> {
-    const response = await $api.post<string>(`/get-code`, { email });
+    const response = await $api.post<string>(`auth/get-code`, { email });
     return response
   }
 
   static async passwordRecovery(email: string, resetPasswordCode: string,newPassword:string): Promise<AxiosResponse<AuthResponse>> {
-    const response = await $api.patch<any>(`/password-recovery`, { email, resetPasswordCode,newPassword });
+    const response = await $api.patch(`auth/password-recovery`, { email, resetPasswordCode,newPassword });
     return response
   }
 }

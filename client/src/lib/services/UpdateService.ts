@@ -1,15 +1,17 @@
 import axios, {type AxiosResponse} from 'axios';
 import $api from '$lib/http/auth';
-import type {AuthResponse} from '$lib/types/AuthResponse';
+import {usernameStore} from '../../store/store';
+
 
 export class UpdateService {
-    static async updatePassword(email: string, password: string): Promise<AxiosResponse<string>> {
-       const response = await $api.patch<string>(`/users/${email}/update-password`, { email, password });
-       return response
-    }
 
-    static async updateEmail(email: string): Promise<AxiosResponse<AuthResponse>> {
-        const response = await $api.patch<AuthResponse>(`/users/${email}/update-email`, { email });
-        return response;
-    }
+  static async updateUsername(email: string, newUsername: string): Promise<AxiosResponse<any>> {
+    const response = await $api.patch(`users/update-username`, { email, newUsername });
+    localStorage.setItem('username',newUsername)
+    usernameStore.set(newUsername)
+    console.log('updateUser response',response);
+    return response
+  }
+
+
 }

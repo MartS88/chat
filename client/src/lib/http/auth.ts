@@ -4,8 +4,7 @@ import axios from 'axios';
 import type {Token} from '$lib/types/Token';
 
 // URL
-const API_URL = 'http://localhost:5000/auth';
-
+const API_URL = 'http://localhost:5000/';
 
 const $api = axios.create({
   baseURL: API_URL,

@@ -6,17 +6,18 @@
 
   // Transitions
   import {fade} from 'svelte/transition';
+  import {emailStore, isActivatedStore, usernameStore} from '../../../store/store';
 
   // Variables
   let user = {
-    username: 'dexter',
+    username: '',
     email: '',
-    isActivated: false
+    isActivated: false,
+    password: '',
   };
-  let password = ('*').repeat(user.email.length);
-  let showText: boolean = false;
 
-  let modalType;
+  let showText: boolean = false;
+  let modalType:string = ''
   let modal = false;
 
   // Functions
@@ -32,11 +33,13 @@
     modalType = ''
     modal = !modal;
   }
-  if (typeof window !== 'undefined') {
-    user.email = localStorage.getItem('email') || '';
-    user.isActivated = localStorage.getItem('isActivated') === 'true';
-    password = '*'.repeat(user.email.length);
-  }
+
+
+  $: user.username = $usernameStore;
+  $: user.email = $emailStore;
+  $: user.isActivated = $isActivatedStore;
+  $: user.password = '*'.repeat(10);
+
 
 
 </script>
@@ -109,7 +112,7 @@
           <Icon iconType="FaExpeditedssl" iconWidth="25" iconHeight="25" iconColor="gray" />
           <span>Password</span>
         </div>
-        <div class="flex-1 font-medium">{password}</div>
+        <div class="flex-1 font-medium">{user.password}</div>
         <button class="ml-auto cursor-pointer" on:click={() => setModal('password')}>
           <Icon iconType="FaEdit" iconWidth="25" iconHeight="25" iconColor="gray" />
         </button>

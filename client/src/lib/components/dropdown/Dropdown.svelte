@@ -21,6 +21,9 @@
     showDropdown = !showDropdown;
   }
 
+  function handleDropdown(value:boolean){
+    showDropdown = value
+  }
   function handleNavigate() {
     toggleSidebarState(true);
     setTimeout(() => {
@@ -60,7 +63,7 @@
 {:else}
   <div class="w-70 relative flex flex-col justify-center items-center cursor-pointer"
        use:clickOutside
-       on:outclick={toggleDropdown}
+       on:outclick={() => handleDropdown(false)}
        on:click="{toggleDropdown}">
     <div
       class="w-full p-1 flex items-center border-gray-200 rounded-full transition-colors duration-300 hover:bg-custom-gray-transparent hover:rounded-full">

@@ -95,6 +95,30 @@ function createIsActivatedStore(){
   };
 }
 
+function createUsernameStore(){
+  let initialValue = null;
+  if (typeof window !== 'undefined') {
+    initialValue = localStorage.getItem('username')
+  }
+  const {subscribe, set} = writable(initialValue);
+
+  return {
+    subscribe,
+    set: (value) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('username', value);
+      }
+      set(value);
+    },
+    clear: () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('username');
+      }
+      set(null);
+    }
+  };
+}
 export const accessTokenStore = createAccessTokenStore();
 export const emailStore = createEmailStore();
 export const isActivatedStore = createIsActivatedStore()
+export const usernameStore = createUsernameStore()

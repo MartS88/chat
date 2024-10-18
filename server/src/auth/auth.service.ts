@@ -278,7 +278,6 @@ export class AuthService {
       include: {all: true}
     });
     if (!recoveryCode) {
-      console.log('emailVerification-SERVER');
       throw new Error('Verification code is not correct');
     }
 

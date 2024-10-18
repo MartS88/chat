@@ -26,6 +26,17 @@ export class UsersService {
 
     }
 
+    async updateUsername(dto: UpdateUsernameDto) {
+            const user = await this.getUserByEmail(dto.email)
+            if (!user) {
+                throw new Error('User with this email does not exist');
+            }
+            user.username = dto.newUsername
+            await user.save()
+            return 'Username updated'
+    }
+
+
     async updatePassword(dto: UpdatePasswordDto): Promise<void> {
         try {
             const {email, newPassword} = dto;
@@ -34,7 +45,6 @@ export class UsersService {
                 where: {email: email.toLowerCase()},
                 include: {all: true},
             });
-
             const hashPassword = await bcrypt.hash(newPassword, 5);
             user.password = hashPassword;
             await user.save();
@@ -48,17 +58,6 @@ export class UsersService {
     }
 
 
-    async updateUsername(dto: UpdateUsernameDto) {
-        try {
-
-        } catch (error) {
-            console.error('Error updating username:', error);
-            if (error instanceof NotFoundException) {
-                throw error;
-            }
-            throw new InternalServerErrorException('Error updating username');
-        }
-    }
 
     async updateEmail(dto: UpdateEmailDto) {
         try {

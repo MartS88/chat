@@ -1,11 +1,11 @@
-<script >
-  import { page } from '$app/stores';
+<script>
+  import {page} from '$app/stores';
 
   // Transition
   import {fade, fly} from 'svelte/transition';
 
   //Styles
-  import '../app.css';
+  import '$lib/style/app.css';
 
   //Components
   import Header from '$lib/components/structure/header/Header.svelte';
@@ -20,12 +20,11 @@
   $: searchState = $searchInputState;
   $: authModal = $authModalState;
   $: sidebarState = $sidebarMenuState;
-
-
+  $: authPath = $page.url.pathname.startsWith('/auth');
 
 </script>
 
-{#if !$page.url.pathname.startsWith('/auth')}
+{#if !authPath}
   <div class="w-full max-w-[2000px] mx-auto">
     <Header />
     <main>
@@ -55,9 +54,11 @@
     {/if}
     <Footer />
   </div>
-  {:else}
-    <slot/>
-  {/if}
+{:else}
+  <div class="auth_patch" in:fly={{ y: 200, duration: 500 }}>
+    <slot />
+  </div>
+{/if}
 
 <style lang="scss">
   .auth_popup {
@@ -115,7 +116,5 @@
 
       }
     }
-
-
   }
 </style>

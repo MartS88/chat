@@ -1,44 +1,41 @@
-function sum_pairs(ints, s) {
-  const pairsCount = new Map();
-  let result = undefined;
-  let minIndex = Infinity;
-
-  for (let i = 0; i < ints.length; i++) {
-    let current = ints[i];
-    let partner = s - current;
 
 
-    if (pairsCount.has(partner)) {
-      let partnerIndex = pairsCount.get(partner);
+// function sum_pairs(ints, s) {
+//   const pairsCount = new Map();
+//   let result = undefined;
+//   let minIndex = Infinity;
+//
+//   for (let i = 0; i < ints.length; i++) {
+//     let current = ints[i];
+//     let partner = s - current;
+//
+//
+//     if (pairsCount.has(partner)) {
+//       let partnerIndex = pairsCount.get(partner);
+//
+//       // Проверяем, меньше ли индекс найденной пары
+//       if (i < minIndex) {
+//         result = [partner, current];
+//         minIndex = i;  // Обновляем минимальный индекс
+//       }
+//     }
+//
+//     // Запоминаем текущее число и его индекс
+//     if (!pairsCount.has(current)) {
+//       pairsCount.set(current, i);
+//     }
+//   }
+//
+//   return result;
+// }
+//
+// // Примеры тестов
+// console.log(sum_pairs([11, 3, 7, 5], 10)); // [3, 7]
+// console.log(sum_pairs([4, 3, 2, 3, 4], 6)); // [4, 2]
+// console.log(sum_pairs([0, 0, -2, 3], 2)); // undefined
+// console.log(sum_pairs([10, 5, 2, 3, 7, 5], 10)); // [3, 7]
 
-      // Проверяем, меньше ли индекс найденной пары
-      if (i < minIndex) {
-        result = [partner, current];
-        minIndex = i;  // Обновляем минимальный индекс
-      }
-    }
 
-    // Запоминаем текущее число и его индекс
-    if (!pairsCount.has(current)) {
-      pairsCount.set(current, i);
-    }
-  }
-
-  return result;
-}
-
-// Примеры тестов
-console.log(sum_pairs([11, 3, 7, 5], 10)); // [3, 7]
-console.log(sum_pairs([4, 3, 2, 3, 4], 6)); // [4, 2]
-console.log(sum_pairs([0, 0, -2, 3], 2)); // undefined
-console.log(sum_pairs([10, 5, 2, 3, 7, 5], 10)); // [3, 7]
-
-
-// Примеры
-console.log(sum_pairs([11, 3, 7, 5], 10)); // [3, 7]
-console.log(sum_pairs([4, 3, 2, 3, 4], 6)); // [4, 2]
-console.log(sum_pairs([0, 0, -2, 3], 2)); // null
-console.log(sum_pairs([10, 5, 2, 3, 7, 5], 10)); // [3, 7]
 
 // Примеры
 // console.log(sum_pairs([11, 3, 7, 5], 10)); // [3, 7]
@@ -46,7 +43,7 @@ console.log(sum_pairs([10, 5, 2, 3, 7, 5], 10)); // [3, 7]
 // console.log(sum_pairs([0, 0, -2, 3], 2)); // null
 // console.log(sum_pairs([10, 5, 2, 3, 7, 5], 10)); // [3, 7]
 
-console.log('sum', sum_pairs([11, 3, 7, 5], 10))
+
 
 
 // var longestConsecutive = function(nums) {
