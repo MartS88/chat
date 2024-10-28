@@ -35,7 +35,7 @@
   on:click={onClick}
 >
   {#if loading}
-    <Loader logoWidth="25" logoHeight="25" />
+    <Loader type="dual_ring" logoWidth="25" logoHeight="25" />
   {:else}
     <slot>
       {label}

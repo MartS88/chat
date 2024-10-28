@@ -1,6 +1,8 @@
 <script lang="ts">
   import {page} from '$app/stores';
   import {z} from 'zod';
+  import {onMount} from 'svelte';
+  import {goto} from '$app/navigation';
 
   // Icons
   import IoMdPersonAdd from 'svelte-icons/io/IoMdPersonAdd.svelte';
@@ -16,15 +18,13 @@
 
   // Store
   import {closeAuthModal} from '../../../../store/store';
+  import {addToast, toasts} from '../../../../store/toast';
 
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
-  import {useToast} from '$lib/components/toast/usetoast';
 
   // Service
   import AuthService from '$lib/services/AuthService';
-  import {addToast, toasts} from '../../../../store/toast';
-  import {onMount} from 'svelte';
 
   // Variables
   let formFilled;
@@ -73,7 +73,6 @@
   });
 
 
-
   // Functions
   export let setMode: (value: string) => void;
 
@@ -102,7 +101,7 @@
       passwordError = result.error.errors[0].message;
       passwordDirty = true;
     } else {
-      passwordError = ''
+      passwordError = '';
       passwordDirty = false;
     }
   }
@@ -114,7 +113,7 @@
     passwordVerifyValue = event.detail;
     const result = passwordVerifySchema.safeParse({
       password,
-      passwordVerifyValue,
+      passwordVerifyValue
     });
     if (!result.success) {
       passwordVerifyError = result.error.errors[0].message;
@@ -131,20 +130,26 @@
     try {
       const response = await AuthService.login(email, password);
       setTimeout(() => {
+        if (authPath) {
+          loading = false;
+          goto('/user-area');
+          return response;
+        }
         loading = false;
         closeAuthModal();
         return response;
+
       }, 1500);
     } catch (error) {
       console.log('error login', error);
       setTimeout(() => {
-          addToast({
-            type: 'error',
-            id: `Login_${Date.now()}`,
-            visible: true,
-            message: error.response.data.message,
-            duration: 1500
-          });
+        addToast({
+          type: 'error',
+          id: `Login_${Date.now()}`,
+          visible: true,
+          message: error.response.data.message,
+          duration: 1500
+        });
         loading = false;
       }, 1500);
     }
@@ -173,10 +178,11 @@
 
 </script>
 
-<form class="w-full h-auto  flex flex-col justify-between items-center bg-gray-50 p-5  max-w-md mx-auto rounded-lg shadow-lg"
-      use:clickOutside
-      on:outclick={closeAuthModal}
-      on:keydown={handleSubmit}
+<form
+  class="w-full h-auto  flex flex-col justify-between items-center bg-gray-50 p-5  max-w-md mx-auto rounded-lg shadow-lg"
+  use:clickOutside
+  on:outclick={closeAuthModal}
+  on:keydown={handleSubmit}
 >
 
   {#if toastList.length > 0}
@@ -185,7 +191,7 @@
     >
       <Toaster toasts={toastList} />
     </div>
-    {:else}
+  {:else}
     <div class="w-full h-10 z-10"></div>
   {/if}
 
@@ -278,7 +284,7 @@
 
       <Button
         themeName="continue"
-        disabled={!formFilled}
+        disabled={!formFilled | loading}
         loading={loading}
         on:click={handleSignup}
       >

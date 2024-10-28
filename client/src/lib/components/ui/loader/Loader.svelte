@@ -1,13 +1,10 @@
 <script lang="ts">
-
-  // Props
-  export let type:'dots' | 'dual_ring' = 'dual_ring'
-  export let logoWidth: number = 100
+  export let type: 'dots' | 'dual_ring' = 'dual_ring';
+  export let logoWidth: number = 100;
   export let logoHeight: number = 100;
 
-  const logoUrl = type === 'dual_ring' ? 'dual_ring.svg' : 'dots.svg';
-  // const logoUrl = '/dual_ring.svg';
-
+  // Обновляем путь, чтобы он был абсолютным, начиная с корня
+  const logoUrl = type === 'dual_ring' ? '/dual_ring.svg' : '/dots.svg';
 </script>
 
-<img type={type} src={logoUrl} alt="Loading..." width={logoWidth} height={logoHeight}/>
+<img src={logoUrl} alt="Loading..." width={logoWidth} height={logoHeight} />

@@ -27,6 +27,7 @@
 
   // Store
   import {addToast, toasts} from '../../../../store/toast';
+  import {goto} from '$app/navigation';
 
   // Variables
   let formFilled;
@@ -64,7 +65,7 @@
 
   const codeSchema = z.string()
     .min(6, 'Code must contain at least 6 digits*')
-    .regex(/^\d+$/,'Code must contain only numbers*');
+    .regex(/^\d+$/, 'Code must contain only numbers*');
 
   const passwordSchema = z.string()
     .min(5, 'Password must contain more than 5 characters*')
@@ -195,8 +196,23 @@
       };
 
       const response = await axios.patch('http://localhost:5000/auth/password-recovery', body);
+      if (authPath) {
+        setTimeout(() => {
+          addToast({
+            type: 'success',
+            id: `PasswordRecovery_${Date.now()}`,
+            visible: true,
+            message: 'Your password is updated',
+            duration: 1500
+          });
+        }, 500);
+        setTimeout(() => {
+          loading = false;
+          goto('/auth/login');
+          return response;
+        }, 2000);
 
-      if (response.data.success) {
+      } else {
         setTimeout(() => {
           addToast({
             type: 'success',
@@ -210,8 +226,10 @@
           loading = false;
           setMode('login');
         }, 2000);
+
+        return response;
       }
-      return response;
+
     } catch (error) {
 
       setTimeout(() => {
@@ -233,6 +251,7 @@
       await handleSignup();
     }
   }
+
   const unsubscribe = toasts.subscribe(value => {
     toastList = value;
   });
