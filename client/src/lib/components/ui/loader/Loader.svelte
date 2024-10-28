@@ -3,7 +3,6 @@
   export let logoWidth: number = 100;
   export let logoHeight: number = 100;
 
-  // Обновляем путь, чтобы он был абсолютным, начиная с корня
   const logoUrl = type === 'dual_ring' ? '/dual_ring.svg' : '/dots.svg';
 </script>
 

@@ -15,10 +15,6 @@
   // Store
   import {searchInputState, authModalState, toggleInput, accessTokenStore} from '../../../../store/store';
 
-
-  $: searchState = $searchInputState;
-  $: authModal = $authModalState;
-
   function setSearch() {
     searchInputState.update(value => !value);
   }
@@ -37,11 +33,11 @@
   <div class="w-full flex items-center justify-between">
     <Logo logoWidth="45" logoHeight="45" />
 
-    {#if !searchState}
+    {#if  !$searchInputState}
       <Marquee />
     {/if}
 
-    {#if searchState}
+    {#if  $searchInputState}
       <div class="w-[31.25rem]"
            in:fly={{x: 200,  duration: 1000 }}
       >
