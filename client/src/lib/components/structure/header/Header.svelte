@@ -23,9 +23,6 @@
     authModalState.update(value => !value);
   }
 
-  let accessToken;
-  $: accessToken = $accessTokenStore;
-
 </script>
 
 
@@ -53,7 +50,7 @@
       </div>
     {:else}
       <div class="mr-10">
-        {#if accessToken}
+        {#if  $accessTokenStore}
           <div in:fade={{ duration: 100 }}>
             <Dropdown />
           </div>
