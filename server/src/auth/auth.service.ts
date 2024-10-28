@@ -35,6 +35,7 @@ export class AuthService {
 
   async registration(userDto: CreateUserDto) {
     const candidate = await this.userService.getUserByEmail(userDto.email);
+    const candidateUsername = await this.userService.getUserByUsername(userDto.email)
     if (candidate) {
       throw new HttpException('User with this email already exists', HttpStatus.BAD_REQUEST);
     }
@@ -65,7 +66,6 @@ export class AuthService {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is missing');
     }
-
     try {
       const payload = this.jwtService.verify(refreshToken, {secret: process.env.JWT_REFRESH_SECRET});
       const user = await this.userService.getUserByEmail(payload.email);
@@ -74,11 +74,13 @@ export class AuthService {
       }
       return this.generateTokens(user);
     } catch (error) {
+      console.log('refresh token error',error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   private async generateTokens(user: User) {
+    console.log('  expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,',  process.env.ACCESS_TOKEN_EXPIRES_IN,);
     const payload = {id: user.id, email: user.email};
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,

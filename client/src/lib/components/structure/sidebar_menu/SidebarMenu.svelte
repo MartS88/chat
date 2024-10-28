@@ -1,23 +1,23 @@
 <script lang="ts">
   import {goto} from '$app/navigation';
 
-  // Components
-  import Icon from '$lib/components/ui/icon/Icon.svelte';
+  // Icons
+  import FaHome from 'svelte-icons/fa/FaHome.svelte';
+  import FaExchangeAlt from 'svelte-icons/fa/FaExchangeAlt.svelte';
+  import FaMoneyCheckAlt from 'svelte-icons/fa/FaMoneyCheckAlt.svelte';
+  import FaNewspaper from 'svelte-icons/fa/FaNewspaper.svelte';
+  import FaUser from 'svelte-icons/fa/FaUser.svelte';
+  import FaSearch from 'svelte-icons/fa/FaSearch.svelte';
+  import FaNetworkWired from 'svelte-icons/fa/FaNetworkWired.svelte';
 
-  // Types
   import type {SidebarNavItem} from '$lib/types/menu';
-
-  // Store
   import {searchInputState, toggleSidebarState} from '../../../../store/store';
 
-  // Props
   export let sidebarItem: SidebarNavItem[] = [];
 
-  // Variables
   let sidebarActive = false;
   let hoveredMenuItem: number | null = null;
 
-  // Functions
   function toggleSidebarMenu(value: boolean) {
     sidebarActive = value;
   }
@@ -41,7 +41,6 @@
     hoveredMenuItem = null;
   }
 
-  //Data
   const menuItems: SidebarNavItem[] = [
     {
       icon: 'FaHome',
@@ -86,36 +85,42 @@
       handler: () => window.open('http://localhost:5000/api/docs', '_blank')
     }
   ];
-
-
 </script>
 
-
 <div
-  class="sidebar_menu  {sidebarActive ? 'active' : ''}"
+  class="sidebar_menu {sidebarActive ? 'active' : ''}"
   on:mouseenter={() => toggleSidebarMenu(true)}
   on:mouseleave={() => toggleSidebarMenu(false)}
 >
   <div class="sidebar_menu_wrapper">
-    {#each menuItems as item,index}
+    {#each menuItems as item, index}
       <div
         class="sidebar_menu_block"
         on:mouseenter={() => handleMouseEnter(index)}
         on:mouseleave={handleMouseLeave}
         on:click={item.handler}
       >
-        <Icon
-          iconType={item.icon}
-          iconWidth={20}
-          iconHeight={20}
-          iconColor={hoveredMenuItem === index ? '#818ea3' : 'gray'}
-          on:click={item.handler} />
+        <div class="flex justify-center items-center w-5 h-5 {hoveredMenuItem === index ? 'text-[#818ea3]' : 'text-gray-500'}">
+          {#if item.icon === 'FaHome'}
+            <FaHome />
+          {:else if item.icon === 'FaExchangeAlt'}
+            <FaExchangeAlt />
+          {:else if item.icon === 'FaMoneyCheckAlt'}
+            <FaMoneyCheckAlt />
+          {:else if item.icon === 'FaNewspaper'}
+            <FaNewspaper />
+          {:else if item.icon === 'FaUser'}
+            <FaUser />
+          {:else if item.icon === 'FaSearch'}
+            <FaSearch />
+          {:else if item.icon === 'FaNetworkWired'}
+            <FaNetworkWired />
+          {/if}
+        </div>
         <span class="sidebar_menu_block_title">{item.title}</span>
-
       </div>
     {/each}
   </div>
-
 </div>
 
 <style lang="scss">

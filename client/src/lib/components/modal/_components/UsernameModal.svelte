@@ -1,136 +1,182 @@
 <script lang="ts">
-  import axios from 'axios';
+  import {z} from 'zod';
+  import {onMount} from 'svelte';
+
+  // Icon
+  import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 
   // Components
-  import Icon from '$lib/components/ui/icon/Icon.svelte';
-  import Popup from '$lib/components/popup/auth/Popup.svelte';
+  import Toaster from '$lib/components/toast/Toaster.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
+
+  // Type
+  import type {Toast} from '$lib/types/toast';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';
 
+  // Store
+  import {toasts} from '../../../../store/toast';
+
   // Variables
   let loading: boolean = false;
-  let popupError: boolean = false;
-  let popupType: string = '';
-  let popupMsg: string = '';
+  let textInput;
+
   let username: string = '';
-  let usernameError: string | null = 'Username is required*';
-  let usernameDirty: boolean = false;
+  let usernameError: string = ''
+  let usernameDirty = true
+
+  let toastList = [];
 
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
+  import {useToast} from '$lib/components/toast/usetoast';
+
+  // Service
   import {UpdateService} from '$lib/services/UpdateService';
+
+  // Zod schema for validation
+  const usernameSchema = z.string()
+    .min(4, 'Username must contain more than 3 characters*')
+    .nonempty('Username is required*');
 
   // Functions
   export let handleModal: () => void;
+
+  function addToast(toast: Toast) {
+    useToast(toast);
+  }
 
   function validateUsername(event: Event) {
     if (!event) return;
     username = event.detail;
 
-    usernameDirty = true;
-    if (username.length === 0) {
-      usernameError = 'Username is required*';
-    } else if (username.length <= 3) {
-      usernameError = 'Username must contain more than 3 characters*';
+    const result = usernameSchema.safeParse(username);
+    if (!result.success) {
+      usernameError = result.error.errors[0].message;
+      usernameDirty = true
     } else {
-      usernameError = null;
+      usernameError = ''
+      usernameDirty = false
     }
-  }
-
-  function closePopup() {
-    popupError = false;
   }
 
   async function changeUsername() {
-    popupMsg = '';
-    popupError = false;
     loading = true;
     try {
-      const email = localStorage.getItem('email')
-      const response = await UpdateService.updateUsername(email,username)
-      setTimeout(() => {
-        popupType = 'success'
-        popupError = true
-        popupMsg = 'Username updated'
-      })
+      const email = localStorage.getItem('email');
+      const response = await UpdateService.updateUsername(email, username);
+      addToast({
+        type: 'success',
+        id: `UsernameModal_${Date.now()}`,
+        visible: true,
+        message: response.data.message,
+        duration: 1500,
+      });
       setTimeout(() => {
         loading = false;
-        handleModal()
-        return response
-      }, 1500);
+       handleModal();
+        return response;
+      }, 1700);
+
     } catch (error) {
-      console.log('username error', error);
+      addToast({
+        type: 'error',
+        id: `UsernameModal_${Date.now()}`,
+        visible: true,
+        message: error.response?.data?.message || 'Server error',
+        duration: 1500,
+      });
       setTimeout(() => {
-        popupType = 'client-error';
-        popupMsg = error.response.data.message || 'Server error';
-        popupError = true;
         loading = false;
-      }, 1500);
+      }, 1700);
     }
   }
 
-  $: formFilled = !usernameError;
+  const unsubscribe = toasts.subscribe(value => {
+    toastList = value;
+  });
+
+  onMount(() => {
+    textInput.focus();
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  $: formFilled = !usernameDirty;
 
 </script>
 
-  <div class="w-96 bg-white rounded-lg shadow-lg p-6 flex flex-col justify-center gap-3"
-       use:clickOutside
-       on:outclick={handleModal}
-  >
-    {#if popupError}
-      <div class="w-full h-10 z-10" in:fly={{ x: 200, duration: 1000 }}>
-        <Popup type={popupType} label={popupMsg} on:click={closePopup} />
-      </div>
-    {:else}
-      <div class="h-10">
+<form class="w-96 h-auto bg-white rounded-lg shadow-lg p-6 flex flex-col justify-between gap-3"
+      use:clickOutside
+      on:outclick={handleModal}
+      on:submit|preventDefault={changeUsername}
+>
+
+  <div class="w-full h-10 z-10">
+    {#if toastList.length > 0}
+      <div class="w-full h-10 z-10"
+           in:fly={{ x: 200, duration: 1000 }}
+           out:fade={{duration:100}}
+      >
+        <Toaster toasts={toastList} />
       </div>
     {/if}
-    <div class="w-full flex justify-center items-center">
-      <div class="bg-white shadow-lg p-6 w-auto flex justify-center">
-        <Icon iconType="FaEdit" iconWidth="30" iconHeight="30" iconColor="gray" />
+  </div>
+
+  <div class="w-full flex justify-center items-center">
+    <div class="bg-white shadow-lg p-6 w-auto flex justify-center">
+      <div class="w-8 h-8 text-gray-500">
+        <FaEdit />
       </div>
     </div>
-    <div class="w-full flex justify-center items-center">
-      <h2 class="text-2xl font-prompt">Edit username</h2>
-    </div>
-    <div class="flex items-center justify-center">
-      <hr class="border-t border-gray-300 w-full max-w-xl mx-auto" />
-    </div>
-
-    <div class="h-20">
-      <label for="username" class="block mb-1 text-sm font-medium text-gray-700">username</label>
-      <Input
-        type="text"
-        name="username"
-        placeholder="Username"
-        themeName="primary"
-        bind:value={username}
-        on:input={validateUsername}
-      />
-      {#if usernameError && usernameDirty}
-        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>
-          {usernameError}
-        </p>
-      {/if}
-    </div>
-
-    <div class="w-full flex justify-between gap-5">
-      <Button
-        themeName="cancel"
-        on:click={handleModal}>
-        Cancel
-      </Button>
-      <Button
-        themeName="continue"
-        loading={loading}
-        disabled={!formFilled}
-        on:click={changeUsername}
-      >
-        Continue
-      </Button>
-    </div>
   </div>
+  <div class="w-full flex justify-center items-center">
+    <h2 class="text-2xl font-prompt">Edit username</h2>
+  </div>
+  <div class="flex items-center justify-center">
+    <hr class="border-t border-gray-300 w-full max-w-xl mx-auto" />
+  </div>
+
+  <div class="h-auto">
+    <label for="username" class="block mb-1 text-sm font-medium text-gray-700">username</label>
+    <Input
+      type="text"
+      name="username"
+      placeholder="Username"
+      themeName="primary"
+      bind:this={textInput}
+      bind:value={username}
+      on:input={validateUsername}
+    />
+    {#if usernameDirty}
+      <p class="text-red-500 text-sm ml-0.5 mt-0.5 mb-0.5 font-medium"
+         in:fade={{ duration: 100 }}
+         out:fade={{duration:100}}
+      >
+        {usernameError}
+      </p>
+    {/if}
+  </div>
+
+  <div class="w-full flex justify-between items-center gap-5">
+    <Button
+      themeName="cancel"
+      type='button'
+      on:click={handleModal}>
+      Cancel
+    </Button>
+
+    <Button
+      themeName="continue"
+      type='submit'
+      loading={loading}
+      disabled={!formFilled || loading}
+    >
+      Continue
+    </Button>
+  </div>
+</form>
 

@@ -1,7 +1,11 @@
 import {
   Body,
-  Controller, Get, HttpException,
-  HttpStatus, Param, Patch,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Patch,
   Post,
   Req,
   Res,
@@ -33,7 +37,7 @@ export class AuthController {
   @UsePipes(ValidationPipe)
   async login(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
     const userData = await this.authService.login(userDto);
-    res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true});
+    res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true,sameSite: 'lax'});
     return {accessToken: userData.tokens.accessToken, username:userData.username, email: userData.email, isActivated: userData.isActivated};
   }
 
@@ -42,17 +46,24 @@ export class AuthController {
   @UsePipes(ValidationPipe)
   async registration(@Body() userDto: CreateUserDto, @Res({passthrough: true}) res: Response) {
     const userData = await this.authService.registration(userDto);
-    res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true});
+    res.cookie('refreshToken', userData.tokens.refreshToken, {httpOnly: true, secure: true,sameSite: 'lax'});
     return {accessToken: userData.tokens.accessToken, username:userData.username, email: userData.email, isActivated:userData.isActivated};
   }
 
-  @ApiOperation({summary: 'Refresh token'})
   @Post('/refresh')
   @UsePipes(ValidationPipe)
-  async refresh(@Body('refreshToken') refreshToken: string, @Res() res: Response) {
+  async refresh(@Req() req: RequestWithCookies, @Res({passthrough: true}) res: Response) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
     const tokens = await this.authService.refresh(refreshToken);
-    res.cookie('refreshToken', tokens.refreshToken, {httpOnly: true, secure: true});
-    return res.json({accessToken: tokens.accessToken});
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @ApiOperation({summary: 'Logout'})
@@ -69,7 +80,6 @@ export class AuthController {
       res.clearCookie('refreshToken');
       return res.json({message: 'Logout successful'});
     } catch (error) {
-      console.log('error', error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: 'Logout failed'});
     }
   }
@@ -137,28 +147,5 @@ export class AuthController {
     }
   }
 
-
-  //
-  // @Get('/me')
-  // async getProfile(@Req() req: Request, @Res() res: Response) {
-  //   // Получаем refreshToken из cookies
-  //   const refreshToken = req.cookies['refreshToken'];
-  //   if (!refreshToken) {
-  //     throw new UnauthorizedException('Refresh token not found');
-  //   }
-  //
-  //   try {
-  //     // Проверяем, существует ли токен в базе данных и является ли он валидным
-  //     const user = await this.authService.verifyRefreshToken(refreshToken);
-  //     if (!user) {
-  //       throw new UnauthorizedException('Invalid token');
-  //     }
-  //
-  //     // Возвращаем данные пользователя, если токен валиден
-  //     return res.json({ user });
-  //   } catch (error) {
-  //     throw new UnauthorizedException('Unauthorized');
-  //   }
-  // }
 
 }

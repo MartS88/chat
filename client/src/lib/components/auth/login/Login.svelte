@@ -1,12 +1,15 @@
 <script lang="ts">
   import {page} from '$app/stores';
+  import {z} from 'zod';
+
+  // Icons
+  import IoMdPersonAdd from 'svelte-icons/io/IoMdPersonAdd.svelte';
 
   // Components
-  import Icon from '$lib/components/ui/icon/Icon.svelte';
+  import Toaster from '$lib/components/toast/Toaster.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import ButtonLink from '$lib/components/ui/buttonlink/ButtonLink.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
-  import Popup from '$lib/components/popup/auth/Popup.svelte';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';
@@ -16,52 +19,76 @@
 
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
+  import {useToast} from '$lib/components/toast/usetoast';
 
   // Service
   import AuthService from '$lib/services/AuthService';
-
-  // Functions
-  export let setMode: (value: string) => void;
+  import {addToast, toasts} from '../../../../store/toast';
+  import {onMount} from 'svelte';
 
   // Variables
   let formFilled;
   let loading = false;
 
-  let popupError = false;
-  let popupType = '';
-  let popupMsg = '';
-
   let email: string = '';
-  let emailError: string | null = 'Email is required*';
-  let emailDirty: boolean = false;
+  let emailError: string = '';
+  let emailDirty: boolean = true;
 
   let password: string = '';
-  let passwordError: string | null = 'Password is required*';
-  let passwordDirty: boolean = false;
+  let passwordError: string = '';
+  let passwordDirty: boolean = true;
 
   let passwordVerifyValue: string = '';
-  let passwordVerifyError: string | null = 'Confirm password*';
-  let passwordVerifyDirty: boolean = false;
+  let passwordVerifyError: string = '';
+  let passwordVerifyDirty: boolean = true;
 
+  let toastList = [];
+
+  // Zod schema for validation
+  const emailSchema = z.string()
+    .nonempty('Email is required*')
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i,
+      {message: 'Enter a valid email'}
+    );
+
+  const passwordSchema = z.string()
+    .min(5, 'Password must contain more than 5 characters*')
+    .nonempty('Password is required*');
+
+  const passwordVerifySchema = z.object({
+    password: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('New password is required*'),
+    passwordVerifyValue: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('Confirm password is required*')
+  }).refine((data) => {
+    return data.password === data.passwordVerifyValue;
+  }, {
+    message: 'Passwords do not match*',
+    path: ['passwordVerifyValue']
+  });
+
+
+
+  // Functions
+  export let setMode: (value: string) => void;
 
   function validateEmail(event: Event) {
     if (!event) {
       return;
     }
     email = event.detail;
-    if (email.length === 0) {
+    const result = emailSchema.safeParse(email);
+    if (!result.success) {
+      emailError = result.error.errors[0].message;
       emailDirty = true;
-      emailError = 'Email is required*';
     } else {
-      const re = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
-      if (!re.test(String(email).toLowerCase())) {
-
-        emailDirty = true;
-        emailError = 'Enter a valid email*';
-      } else {
-        emailDirty = false;
-        emailError = null;
-      }
+      emailError = '';
+      emailDirty = false;
     }
   }
 
@@ -70,16 +97,13 @@
       return;
     }
     password = event.detail;
-    if (password.length === 0) {
+    const result = passwordSchema.safeParse(password);
+    if (!result.success) {
+      passwordError = result.error.errors[0].message;
       passwordDirty = true;
-      passwordError = 'Password is required*';
-
-    } else if (password.length <= 5) {
-      passwordDirty = true;
-      passwordError = 'Password must be longer than 5 symbols*';
     } else {
+      passwordError = ''
       passwordDirty = false;
-      passwordError = null;
     }
   }
 
@@ -88,25 +112,21 @@
       return;
     }
     passwordVerifyValue = event.detail;
-    if (passwordVerifyValue.length === 0) {
+    const result = passwordVerifySchema.safeParse({
+      password,
+      passwordVerifyValue,
+    });
+    if (!result.success) {
+      passwordVerifyError = result.error.errors[0].message;
       passwordVerifyDirty = true;
-      passwordVerifyError = 'Password is required*';
-    } else if (passwordVerifyValue !== password) {
-      passwordVerifyDirty = true;
-      passwordVerifyError = 'Passwords do not match*';
-    } else if (passwordVerifyValue === password) {
+    } else {
+      passwordVerifyError = '';
       passwordVerifyDirty = false;
-      passwordVerifyError = null;
     }
-  }
 
-  function closePopup() {
-    popupError = false;
   }
 
   async function handleSignup() {
-    popupMsg = '';
-    popupError = false;
     loading = true;
     try {
       const response = await AuthService.login(email, password);
@@ -118,9 +138,13 @@
     } catch (error) {
       console.log('error login', error);
       setTimeout(() => {
-        popupType = 'client-error';
-        popupMsg = error.response.data.message || 'Server error';
-        popupError = true;
+          addToast({
+            type: 'error',
+            id: `Login_${Date.now()}`,
+            visible: true,
+            message: error.response.data.message,
+            duration: 1500
+          });
         loading = false;
       }, 1500);
     }
@@ -133,26 +157,45 @@
     }
   }
 
-  $: formFilled = !emailError && !passwordError && !passwordVerifyError;
+  const unsubscribe = toasts.subscribe((value) => {
+    toastList = value;
+  });
+
+  onMount(() => {
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  $: formFilled = !emailDirty && !passwordDirty && !passwordVerifyDirty;
   $: authPath = $page.url.pathname.startsWith('/auth');
+
 
 </script>
 
-<form class="flex flex-col items-center bg-gray-50 p-5 w-full max-w-md mx-auto rounded-lg shadow-lg"
-      use:clickOutside on:outclick={closeAuthModal}
+<form class="w-full h-auto  flex flex-col justify-between items-center bg-gray-50 p-5  max-w-md mx-auto rounded-lg shadow-lg"
+      use:clickOutside
+      on:outclick={closeAuthModal}
       on:keydown={handleSubmit}
 >
-  <div class="w-full h-10 z-10">
-    {#if popupError}
-      <div class="w-full" in:fly={{x: 200,  duration: 1000 }}>
-        <Popup type={popupType} label={popupMsg} on:click={closePopup} />
-      </div>
-    {/if}
-  </div>
 
-  <div class="flex flex-col items-center mb-8">
+  {#if toastList.length > 0}
+    <div class="w-full h-10 z-10"
+         in:fly={{ x: 200, duration: 1000 }}
+    >
+      <Toaster toasts={toastList} />
+    </div>
+    {:else}
+    <div class="w-full h-10 z-10"></div>
+  {/if}
+
+
+  <div class="flex flex-col items-center mb-4">
     <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-      <Icon iconType="IoMdPersonAdd" iconColor="black" />
+      <div class="w-8 h-8 text-black">
+        <IoMdPersonAdd />
+      </div>
+
     </div>
 
     <h2 class="text-2xl font-bold mb-2">Email login</h2>
@@ -171,7 +214,10 @@
         on:input={(event) => validateEmail(event)}
       />
       {#if emailError && emailDirty}
-        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{emailError}</p>
+        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+           in:fade={{ duration: 100 }}
+           out:fade={{duration:100}}
+        >{emailError}</p>
       {/if}
     </div>
 
@@ -186,7 +232,10 @@
 
       />
       {#if passwordError && passwordDirty}
-        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{passwordError}</p>
+        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+           in:fade={{ duration: 100 }}
+           out:fade={{duration:100}}
+        >{passwordError}</p>
       {/if}
     </div>
 
@@ -202,7 +251,9 @@
         />
         {#if passwordVerifyError && passwordVerifyDirty}
           <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
-             in:fade={{ duration: 100 }}>{passwordVerifyError}</p>
+             in:fade={{ duration: 100 }}
+             out:fade={{duration:100}}
+          >{passwordVerifyError}</p>
         {/if}
       </div>
       <div class="">

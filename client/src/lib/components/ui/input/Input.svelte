@@ -36,16 +36,13 @@
     let inputValue = event.currentTarget.value;
 
     if (type === 'number') {
-
       inputValue = inputValue.replace(/[^0-9]/g, '');
 
       if (maxLength !== null) {
         inputValue = inputValue.slice(0, maxLength);
       }
-
       event.currentTarget.value = inputValue;
     }
-
     dispatch('input', inputValue);
   }
 

@@ -40,5 +40,4 @@
 
 <style lang="scss">
   @import '$lib/style/components/button';
-
 </style>

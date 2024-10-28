@@ -1,13 +1,11 @@
 import axios from 'axios';
+import { PUBLIC_API_URL } from '$env/static/public';
 
 // Types
 import type {Token} from '$lib/types/Token';
 
-// URL
-const API_URL = 'http://localhost:5000/';
-
 const $api = axios.create({
-  baseURL: API_URL,
+  baseURL: PUBLIC_API_URL,
   withCredentials: true
 });
 

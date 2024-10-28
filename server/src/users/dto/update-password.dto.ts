@@ -8,7 +8,13 @@ export class UpdatePasswordDto {
   @IsEmail({}, {message: 'Not correct email'})
   readonly email: string;
 
-  @ApiProperty({example: '12345', description: 'Password'})
+  @ApiProperty({example: 'dexter12', description: 'Password'})
+  @IsString({message: 'Value must be string'})
+  @IsNotEmpty()
+  @Length(5, 16, {message: 'Password must contain from 5 to 16 characters'})
+  readonly password: string;
+
+  @ApiProperty({example: 'dexter13!', description: 'New password'})
   @IsString({message: 'Value must be string'})
   @IsNotEmpty()
   @Length(5, 16, {message: 'Password must contain from 5 to 16 characters'})

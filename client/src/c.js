@@ -1,4 +1,22 @@
+var longestConsecutive = function(nums) {
+  let numsCount = new Map()
+  let arr = []
 
+  for (let i=0;i < nums.length;i++){
+    const num = nums[i]
+    numsCount.set(num,(numsCount.get(num) || 0)+1)
+  }
+  for (let [key] of numsCount){
+    if (numsCount.has(key * -1)){
+      arr.push(key)
+    }
+  }
+  const result = arr.filter(num => num > 0).sort((a,b) => b-a)
+return arr.length === 0 ? -1 : result.at(0)
+}
+
+
+console.log('longest', longestConsecutive([-49,8,19,-39,37,22,-39,4,37,8,20,-2,-4,-5,14,-14,-27,24,30,3,-12,19,22,28,-3,-6,6,22,37,27,16,27,-6,-49,31,29]));
 
 // function sum_pairs(ints, s) {
 //   const pairsCount = new Map();

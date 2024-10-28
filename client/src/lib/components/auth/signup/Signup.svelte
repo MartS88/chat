@@ -1,18 +1,22 @@
 <script lang="ts">
   import {page} from '$app/stores';
+  import {onMount} from 'svelte';
+  import {z} from 'zod';
 
+  // Icons
+  import IoMdPersonAdd from 'svelte-icons/io/IoMdPersonAdd.svelte';
   // Components
-  import Icon from '$lib/components/ui/icon/Icon.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import ButtonLink from '$lib/components/ui/buttonlink/ButtonLink.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
-  import Popup from '$lib/components/popup/auth/Popup.svelte';
+  import Toaster from '$lib/components/toast/Toaster.svelte';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';
 
   // Store
   import {closeAuthModal} from '../../../../store/store';
+  import {addToast, toasts} from '../../../../store/toast';
 
   // Hooks
   import {clickOutside} from '$lib/hooks/click_outside';
@@ -20,49 +24,77 @@
   // Service
   import AuthService from '$lib/services/AuthService';
 
-
-  // Functions
-  export let setMode: (value: string) => void;
-
   // Variables
   let formFilled;
   let loading = false;
-  let popupError = false;
-  let typeError = '';
-  let errorMsg = '';
+
   let firstStep = true;
   let secondStep = false;
 
   let username: string = '';
-  let usernameError: string | null = 'Username is required*';
+  let usernameError: string = ''
   let usernameDirty: boolean = false;
 
   let email: string = '';
-  let emailError: string | null = 'Email is required*';
+  let emailError: string = ''
   let emailDirty: boolean = false;
 
   let password: string = '';
-  let passwordError: string | null = 'Password is required*';
+  let passwordError: string = ''
   let passwordDirty: boolean = false;
 
   let passwordVerifyValue: string = '';
-  let passwordVerifyError: string | null = 'Confirm password*';
+  let passwordVerifyError: string = ''
   let passwordVerifyDirty: boolean = false;
 
+  let toastList = []
+
+  // Zod schema for validation
+  const usernameSchema = z.string()
+    .min(4, 'Username must contain more than 3 characters*')
+    .nonempty('Username is required*');
+
+  const emailSchema = z.string()
+    .nonempty('Email is required*')
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i,
+      {message: 'Enter a valid email'}
+    );
+
+  const passwordSchema = z.string()
+    .min(5, 'Password must contain more than 5 characters*')
+    .nonempty('Password is required*');
+
+  const passwordVerifySchema = z.object({
+    password: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('New password is required*'),
+    passwordVerifyValue: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('Confirm password is required*')
+  }).refine((data) => {
+    return data.password === data.passwordVerifyValue;
+  }, {
+    message: 'Passwords do not match*',
+    path: ['passwordVerifyValue']
+  });
+
   // Functions
+  export let setMode: (value: string) => void;
+
   function validateUsername(event: Event) {
     if (!event) return;
     username = event.detail;
-    if (username.length === 0) {
-      usernameDirty = true;
-      usernameError = '';
-    }
-    if (username.length <= 3) {
-      usernameDirty = true;
-      usernameError = 'Username must contain more than 3 characters*';
+
+    const result = usernameSchema.safeParse(username);
+    if (!result.success) {
+      usernameError = result.error.errors[0].message;
+      usernameDirty = true
     } else {
-      usernameDirty = false;
-      usernameError = null;
+      usernameError = ''
+      usernameDirty = false
     }
   }
 
@@ -71,19 +103,13 @@
       return;
     }
     email = event.detail;
-    if (email.length === 0) {
+    const result = emailSchema.safeParse(email);
+    if (!result.success) {
+      emailError = result.error.errors[0].message;
       emailDirty = true;
-      emailError = 'Email is required*';
     } else {
-      const re = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
-      if (!re.test(String(email).toLowerCase())) {
-
-        emailDirty = true;
-        emailError = 'Enter a valid email*';
-      } else {
-        emailDirty = false;
-        emailError = null;
-      }
+      emailError = '';
+      emailDirty = false;
     }
   }
 
@@ -92,16 +118,13 @@
       return;
     }
     password = event.detail;
-    if (password.length === 0) {
+    const result = passwordSchema.safeParse(password);
+    if (!result.success) {
+      passwordError = result.error.errors[0].message;
       passwordDirty = true;
-      passwordError = 'Password is required*';
-
-    } else if (password.length <= 5) {
-      passwordDirty = true;
-      passwordError = 'Password must be longer than 5 symbols*';
     } else {
+      passwordError = ''
       passwordDirty = false;
-      passwordError = null;
     }
   }
 
@@ -110,26 +133,22 @@
       return;
     }
     passwordVerifyValue = event.detail;
-    if (passwordVerifyValue.length === 0) {
+    const result = passwordVerifySchema.safeParse({
+      password,
+      passwordVerifyValue,
+    });
+    if (!result.success) {
+      passwordVerifyError = result.error.errors[0].message;
       passwordVerifyDirty = true;
-      passwordVerifyError = 'Password is required*';
-    } else if (passwordVerifyValue !== password) {
-      passwordVerifyDirty = true;
-      passwordVerifyError = 'Passwords do not match*';
-    } else if (passwordVerifyValue === password) {
+    } else {
+      passwordVerifyError = '';
       passwordVerifyDirty = false;
-      passwordVerifyError = null;
     }
-  }
-
-
-  function closePopup() {
-    popupError = false;
   }
 
   async function handleSignup() {
     if (!formFilled) return;
-    popupError = false;
+
     loading = true;
     try {
       const response = await AuthService.registration(username, email, password);
@@ -137,20 +156,20 @@
         firstStep = false;
         secondStep = true;
         loading = false;
-        console.log('response REG', response);
         return response;
       }, 1500);
     } catch (error) {
-      console.log('error singup', error.response.status);
-      console.log('error.message', error.response.data.message);
-
+      console.log('error',error);
       setTimeout(() => {
-        typeError = 'client-error';
-        errorMsg = error.response.data.message || 'Server error';
-        popupError = true;
+        addToast({
+          type: 'error',
+          id: `Signup_${Date.now()}`,
+          visible: true,
+          message: error.response.data.message,
+          duration: 1500
+        });
         loading = false;
       }, 1500);
-
     }
   }
 
@@ -161,9 +180,19 @@
       await handleSignup();
     }
   }
+  const unsubscribe = toasts.subscribe(value => {
+    toastList = value;
+  });
+
+  onMount(() => {
+    return () => {
+      unsubscribe();
+    };
+  });
 
   $: formFilled = !usernameError && !emailError && !passwordError && !passwordVerifyError;
   $: authPath = $page.url.pathname.startsWith('/auth');
+
 
 </script>
 {#if firstStep}
@@ -171,17 +200,22 @@
         use:clickOutside on:outclick={closeAuthModal}
         on:keydown={handleSubmit}
   >
-    <div class="w-full h-10 z-10">
-      {#if popupError}
-        <div class="w-full" in:fly={{x: 200,  duration: 1000 }}>
-          <Popup type={typeError} label={errorMsg} on:click={closePopup} />
-        </div>
-      {/if}
-    </div>
+    {#if toastList.length > 0}
+      <div class="w-full h-10 z-10"
+           in:fly={{ x: 200, duration: 1000 }}
+      >
+        <Toaster toasts={toastList} />
+      </div>
+    {:else}
+      <div class="w-full h-10 z-10"></div>
+    {/if}
 
-    <div class="flex flex-col items-center mb-8">
+    <div class="flex flex-col items-center mb-4">
       <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-        <Icon iconType="IoMdPersonAdd" iconColor="black" />
+        <div class="w-8 h-8 text-black">
+          <IoMdPersonAdd/>
+        </div>
+
       </div>
       <h2 class="text-2xl font-bold mb-2">Email sign up</h2>
       <p class="text-gray-500">Continue to BlockVision</p>
@@ -199,7 +233,10 @@
 
         />
         {#if usernameError && usernameDirty}
-          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{usernameError}</p>
+          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+             in:fade={{ duration: 100 }}
+             out:fade={{duration:100}}
+          >{usernameError}</p>
         {/if}
       </div>
 
@@ -214,7 +251,10 @@
 
         />
         {#if emailError && emailDirty}
-          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{emailError}</p>
+          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+             in:fade={{ duration: 100 }}
+             out:fade={{duration:100}}
+          >{emailError}</p>
         {/if}
       </div>
 
@@ -229,7 +269,10 @@
 
         />
         {#if passwordError && passwordDirty}
-          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{passwordError}</p>
+          <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+             in:fade={{ duration: 100 }}
+             out:fade={{duration:100}}
+          >{passwordError}</p>
         {/if}
       </div>
 
@@ -245,7 +288,9 @@
         />
         {#if passwordVerifyError && passwordVerifyDirty}
           <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
-             in:fade={{ duration: 100 }}>{passwordVerifyError}</p>
+             in:fade={{ duration: 100 }}
+             out:fade={{duration:100}}
+          >{passwordVerifyError}</p>
         {/if}
       </div>
 

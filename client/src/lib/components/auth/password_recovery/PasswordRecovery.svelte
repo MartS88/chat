@@ -1,14 +1,17 @@
 <script lang="ts">
   import {page} from '$app/stores';
   import axios from 'axios';
+  import {z} from 'zod';
+  import {onMount} from 'svelte';
 
+  // Icons
+  import IoIosLock from 'svelte-icons/io/IoIosLock.svelte';
 
   // Components
-  import Icon from '$lib/components/ui/icon/Icon.svelte';
+  import Toaster from '$lib/components/toast/Toaster.svelte';
   import Button from '$lib/components/ui/button/Button.svelte';
   import ButtonLink from '$lib/components/ui/buttonlink/ButtonLink.svelte';
   import Input from '$lib/components/ui/input/Input.svelte';
-  import Popup from '$lib/components/popup/auth/Popup.svelte';
 
   // Transitions
   import {fade, fly} from 'svelte/transition';
@@ -22,55 +25,80 @@
   // Service
   import AuthService from '$lib/services/AuthService';
 
-
-  export let setMode: (value: string) => void;
+  // Store
+  import {addToast, toasts} from '../../../../store/toast';
 
   // Variables
   let formFilled;
   let loading = false;
 
-  let popupError = false;
-  let popupType;
-  let popupMsg;
-
-
   let email: string = '';
-  let emailError: string | null = 'Email is required*';
-  let emailDirty: boolean = false;
+  let emailError: string = '';
+  let emailDirty: boolean = true;
   let emailInput;
 
   let code: string = '';
-  let codeError: string | null = 'Code is required*';
-  let codeDirty: boolean = false;
+  let codeError: string = '';
+  let codeDirty: boolean = true;
   let codeLoading: boolean = false;
 
   let password: string = '';
-  let passwordError: string | null = 'Password is required*';
-  let passwordDirty: boolean = false;
+  let passwordError: string = '';
+  let passwordDirty: boolean = true;
 
   let passwordVerifyValue: string = '';
-  let passwordVerifyError: string | null = 'Confirm password*';
-  let passwordVerifyDirty: boolean = false;
+  let passwordVerifyError: string = '';
+  let passwordVerifyDirty: boolean = true;
+
+  let toastList = [];
+
+  // Zod schema for validation
+  const emailSchema = z.string()
+    .nonempty('Email is required*')
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i,
+      {message: 'Enter a valid email'}
+    );
+
+  const codeSchema = z.string()
+    .min(6, 'Code must contain at least 6 digits*')
+    .regex(/^\d+$/,'Code must contain only numbers*');
+
+  const passwordSchema = z.string()
+    .min(5, 'Password must contain more than 5 characters*')
+    .nonempty('Password is required*');
+
+  const passwordVerifySchema = z.object({
+    password: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('New password is required*'),
+    passwordVerifyValue: z.string()
+      .min(5, 'New password must be longer than 5 characters*')
+      .nonempty('Confirm password is required*')
+  }).refine((data) => {
+    return data.password === data.passwordVerifyValue;
+  }, {
+    message: 'Passwords do not match*',
+    path: ['passwordVerifyValue']
+  });
 
   // Functions
+  export let setMode: (value: string) => void;
+
   function validateEmail(event: Event) {
     if (!event) {
       return;
     }
     email = event.detail;
-    if (email.length === 0) {
+    const result = emailSchema.safeParse(email);
+    if (!result.success) {
+      emailError = result.error.errors[0].message;
       emailDirty = true;
-      emailError = 'Email is required*';
     } else {
-      const re = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
-      if (!re.test(String(email).toLowerCase())) {
-
-        emailDirty = true;
-        emailError = 'Enter a valid email*';
-      } else {
-        emailDirty = false;
-        emailError = null;
-      }
+      emailError = '';
+      emailDirty = false;
     }
   }
 
@@ -79,12 +107,13 @@
       return;
     }
     code = event.detail;
-    if (code.length < 6) {
+    const result = codeSchema.safeParse(code);
+    if (!result.success) {
+      codeError = result.error.errors[0].message;
       codeDirty = true;
-      codeError = 'Code must contain 6 numbers*';
     } else {
+      codeError = '';
       codeDirty = false;
-      codeError = null;
     }
   }
 
@@ -93,16 +122,13 @@
       return;
     }
     password = event.detail;
-    if (password.length === 0) {
+    const result = passwordSchema.safeParse(password);
+    if (!result.success) {
+      passwordError = result.error.errors[0].message;
       passwordDirty = true;
-      passwordError = 'Password is required*';
-
-    } else if (password.length <= 5) {
-      passwordDirty = true;
-      passwordError = 'Password must be longer than 5 symbols*';
     } else {
+      passwordError = '';
       passwordDirty = false;
-      passwordError = null;
     }
   }
 
@@ -111,42 +137,47 @@
       return;
     }
     passwordVerifyValue = event.detail;
-    if (passwordVerifyValue.length === 0) {
+    const result = passwordVerifySchema.safeParse({
+      password,
+      passwordVerifyValue
+    });
+    if (!result.success) {
+      passwordVerifyError = result.error.errors[0].message;
       passwordVerifyDirty = true;
-      passwordVerifyError = 'Password is required*';
-    } else if (passwordVerifyValue !== password) {
-      passwordVerifyDirty = true;
-      passwordVerifyError = 'Passwords do not match*';
-    } else if (passwordVerifyValue === password) {
+    } else {
+      passwordVerifyError = '';
       passwordVerifyDirty = false;
-      passwordVerifyError = null;
     }
   }
 
-  function closePopup() {
-    popupError = false;
-  }
-
   async function sendRecoveryCode() {
-    if (emailError || email.length === 0 || !emailInput) {
+    if (emailDirty) {
       emailInput.focus();
     } else {
-      code = ''
-      popupError = false;
-      popupMsg = '';
+      code = '';
       codeLoading = true;
       try {
         const response = await AuthService.sendRecoveryCode(email);
-        popupType = 'success';
-        popupMsg = response.data.message;
-        popupError = true;
+        addToast({
+          type: 'success',
+          id: `PasswordRecovery_${Date.now()}`,
+          visible: true,
+          message: response.data.message,
+          duration: 1500
+        });
+        console.log('response', response);
         codeLoading = false;
         return response;
       } catch (error) {
+        console.log('error', error);
         setTimeout(() => {
-          popupType = 'client-error';
-          popupMsg = error.response.data.message || 'Server error';
-          popupError = true;
+          addToast({
+            type: 'error',
+            id: `PasswordRecovery_${Date.now()}`,
+            visible: true,
+            message: error.response.data.message,
+            duration: 1500
+          });
           codeLoading = false;
         }, 1500);
 
@@ -155,8 +186,6 @@
   }
 
   async function handleSignup() {
-    popupMsg = '';
-    popupError = false;
     loading = true;
     try {
       const body = {
@@ -169,22 +198,30 @@
 
       if (response.data.success) {
         setTimeout(() => {
-          popupType = 'success';
-          popupMsg = 'Your password is updated';
-          popupError = true;
+          addToast({
+            type: 'success',
+            id: `PasswordRecovery_${Date.now()}`,
+            visible: true,
+            message: 'Your password is updated',
+            duration: 1500
+          });
         }, 500);
         setTimeout(() => {
-          setMode('login')
           loading = false;
-        }, 1500);
+          setMode('login');
+        }, 2000);
       }
       return response;
     } catch (error) {
 
       setTimeout(() => {
-        popupType = 'client-error';
-        popupMsg = error.response.data.message || 'Server error';
-        popupError = true;
+        addToast({
+          type: 'error',
+          id: `PasswordRecovery_${Date.now()}`,
+          visible: true,
+          message: error.response.data.message,
+          duration: 1500
+        });
         loading = false;
       }, 1500);
     }
@@ -196,8 +233,17 @@
       await handleSignup();
     }
   }
+  const unsubscribe = toasts.subscribe(value => {
+    toastList = value;
+  });
 
-  $: formFilled = !emailError && !passwordError && !codeError && !passwordVerifyError;
+  onMount(() => {
+    return () => {
+      unsubscribe();
+    };
+  });
+
+  $: formFilled = !emailDirty && !codeDirty && !passwordDirty && !passwordVerifyDirty;
   $: authPath = $page.url.pathname.startsWith('/auth');
 
 </script>
@@ -207,23 +253,28 @@
       on:outclick={closeAuthModal}
       on:keydown={handleSubmit}
 >
-  <div class="w-full h-10 z-10">
-    {#if popupError}
-      <div class="w-full" in:fly={{x: 200,  duration: 1000 }}>
-        <Popup type={popupType} label={popupMsg} on:click={closePopup} />
-      </div>
-    {/if}
-  </div>
+  {#if toastList.length > 0}
+    <div class="w-full h-10 z-10"
+         in:fly={{ x: 200, duration: 1000 }}
+    >
+      <Toaster toasts={toastList} />
+    </div>
+  {:else}
+    <div class="w-full h-10 z-10"></div>
+  {/if}
 
-  <div class="flex flex-col items-center mb-8">
+  <div class="flex flex-col items-center mb-4">
     <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-      <Icon iconType="IoIosLock" iconColor="black" />
+      <div class="w-8 h-8 text-black">
+        <IoIosLock />
+      </div>
+
     </div>
     <h2 class="text-2xl font-bold mb-2">Password Recovery</h2>
 
   </div>
 
-  <div class="flex flex-col items-center gap-5 w-full p-2">
+  <div class="flex flex-col items-center gap-3 w-full p-2">
     <div class="flex flex-col w-full items-start">
       <Input
         type="email"
@@ -245,10 +296,11 @@
 
         <Input
           type="number"
+          name="code"
           placeholder="Verification code"
           themeName="verification"
           maxLength={6}
-          disabled={emailError || email.length === 0}
+          disabled={emailDirty}
           bind:value={code}
           on:input={(event) => validateCode(event)}
         />
@@ -265,7 +317,10 @@
       </div>
 
       {#if codeError && codeDirty}
-        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{codeError}</p>
+        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+           in:fade={{ duration: 100 }}
+           out:fade={{duration:100}}
+        >{codeError}</p>
       {/if}
     </div>
 
@@ -280,7 +335,10 @@
         on:input={(event) => passwordValidate(event)}
       />
       {#if passwordError && passwordDirty}
-        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium" in:fade={{ duration: 100 }}>{passwordError}</p>
+        <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
+           in:fade={{ duration: 100 }}
+           out:fade={{duration:100}}
+        >{passwordError}</p>
       {/if}
     </div>
 
@@ -296,7 +354,9 @@
       />
       {#if passwordVerifyError && passwordVerifyDirty}
         <p class="text-red-500 text-sm ml-0.5 mt-0.5 font-medium"
-           in:fade={{ duration: 100 }}>{passwordVerifyError}</p>
+           in:fade={{ duration: 100 }}
+           out:fade={{duration:100}}
+        >{passwordVerifyError}</p>
       {/if}
     </div>
 

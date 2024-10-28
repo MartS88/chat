@@ -32,21 +32,3 @@ async function bootstrap() {
 
 bootstrap();
 
-
-// const uniswapService = app.get(UniswapService);
-// const startPolling = async () => {
-//   const pollingInterval = 100; // 1 seconds
-//   const timeout = 60000; // 1 minute timeout for long polling
-//
-//   while (true) {
-//     try {
-//       const opportunityFound = await uniswapService.checkArbitrageOpportunity();
-//
-//       // Wait before polling again
-//       await new Promise(resolve => setTimeout(resolve, pollingInterval));
-//     } catch (error) {
-//       console.error('Error during polling:', error);
-//     }
-//   }
-// };
-// await startPolling()
